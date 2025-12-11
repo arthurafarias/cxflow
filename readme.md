@@ -8,6 +8,14 @@ The design is brand new and the project in an early conceptual stage. Many featu
 
 The example below shows a query being built and executed by the driver. The result is presented in a collection of Maps. Memory usage wasn't taken into account, just usability for now. If you want to contribute with some optimizations over the algorithm. Feel free to contribute in the issues channel.
 
+# Table of Contents
+
+- [Usage](#Usage)
+- [Contributing](#Contributing)
+- [License](#License)
+
+# Usage
+
 Before starting, create a simple database in sqlite3 like the following:
 
 ```sql
@@ -52,4 +60,16 @@ int main(int argc, char *argv[]) {
 g++ -std=c++23 -Isrc examples/person.cpp -o cxorm_person_example -lsqlite3
 ```
 
-After executing the code you will 
+After executing the code you will produce the following output
+
+```
+ID: 0    Name: Arthur de Araújo Farias           Age: 35
+```
+
+# Contributing
+
+We welcome issues and pull requests. Suggestions for optimizations, new drivers, or feature ideas are especially appreciated!
+
+# License
+
+This project is licensed under propertary license – see the [file](license.md) for details.
