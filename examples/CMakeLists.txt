@@ -6,5 +6,8 @@
 ## permission of the copyright holder.
 ## ---------------------------------------------------------------------------
 
-add_executable(${PROJECT_NAME}_Examples person.cpp)
-target_link_libraries(${PROJECT_NAME}_Examples PUBLIC cxorm)
+add_executable(${PROJECT_NAME}-examples-person person.cpp)
+target_link_libraries(${PROJECT_NAME}-examples-person PUBLIC cxorm)
+
+add_executable(${PROJECT_NAME}-examples-person-direct-mapping person-direct-mapping.cpp)
+target_link_libraries(${PROJECT_NAME}-examples-person-direct-mapping PUBLIC cxorm)
