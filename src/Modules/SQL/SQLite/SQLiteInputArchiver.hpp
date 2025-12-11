@@ -45,6 +45,8 @@ SQLiteInputArchiver constexpr &operator%(SQLiteInputArchiver &ar,
     ar.expression = QueryBuilder::create()
                         ->select("*")
                         ->from("{}", tag->name.c_str())
+                        ->order_by("id")
+                        ->desc()
                         ->limit("1");
     ar.result = ar.query(ar.expression).front();
   }

@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
       Core::Logging::LoggerManager::stream_cout());
 
   {
-    auto output = SQLiteOutputArchiver("filename.db");
+    auto output = SQLiteOutputArchiver("database.db");
     auto person = Person();
     person.name = "Arthur";
     person.age = 36;
@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
   }
 
   {
-    auto input = SQLiteInputArchiver("filename.db");
+    auto input = SQLiteInputArchiver("database.db");
     auto person = Person();
     input % person;
     Core::Logging::LoggerManager::info("{} {} {}", person.id,

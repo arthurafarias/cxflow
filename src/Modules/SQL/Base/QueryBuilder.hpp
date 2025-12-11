@@ -143,6 +143,18 @@ public:
     return EnableSharedFromThis<QueryBuilder>::shared_from_this();
   }
 
+  SharedPointer<QueryBuilder> desc() {
+    auto lock = query.acquire_lock();
+    query.push_back(std::format("DESC"));
+    return EnableSharedFromThis<QueryBuilder>::shared_from_this();
+  }
+
+  SharedPointer<QueryBuilder> asc() {
+    auto lock = query.acquire_lock();
+    query.push_back(std::format("ASC"));
+    return EnableSharedFromThis<QueryBuilder>::shared_from_this();
+  }
+
   template <typename... FormatTypes>
   SharedPointer<QueryBuilder>
   limit(const std::format_string<FormatTypes...> &fmt, FormatTypes &&...args) {
