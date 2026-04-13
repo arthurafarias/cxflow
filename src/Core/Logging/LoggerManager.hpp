@@ -18,7 +18,7 @@
 #include <ostream>
 #include <syncstream>
 
-namespace Core::Logging {
+namespace CXORM::Core::Logging {
 
 class LoggerManager {
   LoggerManager() = delete;
@@ -139,4 +139,4 @@ private:
   static inline std::shared_ptr<std::ostream> _stream_default;
   static inline std::shared_ptr<std::ostream> _stream_current;
 };
-} // namespace Core::Logging
+} // namespace CXORM::Core::Logging

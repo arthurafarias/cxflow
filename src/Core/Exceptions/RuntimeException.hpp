@@ -12,7 +12,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace Core::Exceptions {
+namespace CXORM::Core::Exceptions {
 class RuntimeException : public std::runtime_error {
 public:
   template <typename... ArgsTypes>
@@ -21,4 +21,4 @@ public:
       : std::runtime_error(
             std::format(fmt, std::forward<ArgsTypes>(args)...)) {}
 };
-} // namespace Core::Exceptions
+} // namespace CXORM::Core::Exceptions

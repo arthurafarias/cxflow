@@ -11,9 +11,9 @@
 #include "Modules/Serialization/Base/TagType.hpp"
 #include <Core/Containers/String.hpp>
 
-using namespace Core::Containers;
+using namespace CXORM::Core::Containers;
 
-namespace Modules::Serialization::Base {
+namespace CXORM::Serialization::Base {
 struct TagBase {
   TagBase() {}
   TagBase(const String &name, const TagPart &part = TagPart::DoNotApply,
@@ -23,4 +23,4 @@ struct TagBase {
   TagPart part = TagPart::DoNotApply;
   TagType type = TagType::Integral;
 };
-} // namespace Modules::Serialization::Base
+} // namespace CXORM::Serialization::Base

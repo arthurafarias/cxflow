@@ -32,8 +32,8 @@ In a text file write following and then write in C++:
 
 #include <format>
 
-using namespace Modules::SQL::Base;
-using namespace Modules::SQL::SQLite;
+using namespace CXORM::Base;
+using namespace CXORM::SQLite;
 
 int main(int argc, char *argv[]) {
   auto db = SQLiteDriver("database.db");
@@ -80,8 +80,8 @@ You also can use serialization module to match model directly using an Input or 
 #include <sqlite3.h>
 #include <string>
 
-using namespace Modules::Serialization::Base;
-using namespace Modules::SQL::SQLite;
+using namespace CXORM::Serialization::Base;
+using namespace CXORM::SQLite;
 
 struct Person {
   int id;

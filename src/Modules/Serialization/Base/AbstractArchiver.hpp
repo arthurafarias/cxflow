@@ -14,9 +14,9 @@
 #include "Modules/Serialization/Base/ObjectTag.hpp"
 #include <Core/Containers/String.hpp>
 
-using namespace Core::Containers;
+using namespace CXORM::Core::Containers;
 
-namespace Modules::Serialization::Base {
+namespace CXORM::Serialization::Base {
 
 class ArchiveTagFactory {
 protected:
@@ -48,4 +48,4 @@ public:
     return retval;
   }
 };
-} // namespace Modules::Serialization::Base
+} // namespace CXORM::Serialization::Base

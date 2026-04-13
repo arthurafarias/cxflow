@@ -12,9 +12,9 @@
 #include <Core/Containers/String.hpp>
 
 
-using namespace Core::Containers;
+using namespace CXORM::Core::Containers;
 
-namespace Modules::Serialization::Base {
+namespace CXORM::Serialization::Base {
 
 template <typename ValueType> struct ValueTag : KeyValueTag<ValueType> {
   ValueTag() {}
@@ -24,4 +24,4 @@ template <typename ValueType> struct ValueTag : KeyValueTag<ValueType> {
   virtual ~ValueTag() {}
 };
 
-} // namespace Modules::Serialization::Base
+} // namespace CXORM::Serialization::Base

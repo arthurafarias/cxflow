@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Core/Logging/LoggerManager.hpp"
+#include "Core/SharedPointer.hpp"
+#include "Modules/SQL/Base/AbstractDriver.hpp"
 #include "Modules/SQL/Base/QueryBuilder.hpp"
 #include "Modules/SQL/Base/QueryResult.hpp"
 #include <Core/Containers/String.hpp>
@@ -17,14 +19,15 @@
 
 #include <sqlite3.h>
 
-using namespace Utils::Patterns;
+using namespace CXORM::Utils::Patterns;
 
-using namespace Core::Containers;
-using namespace Modules::SQL::Base;
+using namespace CXORM::Core::Containers;
+using namespace CXORM::Base;
 
-namespace Modules::SQL::SQLite {
-class SQLiteDriver : public Creator<SQLiteDriver>,
-                     public EnableSharedFromThis<SQLiteDriver> {
+namespace CXORM::SQLite {
+class SQLiteDriver : public Creator<SQLiteDriver, AbstractDriver>,
+                     public EnableSharedFromThis<SQLiteDriver>,
+                     public AbstractDriver {
 public:
   SQLiteDriver(const String &filename) : filename(filename) {
 
@@ -41,11 +44,13 @@ public:
   using SQLiteCallbackType = std::function<void(void *handle_type, int argc,
                                                 char **value, char **key)>;
 
-  QueryResult query(SharedPointer<Modules::SQL::Base::QueryBuilder> query) {
+  virtual QueryResult
+  query(SharedPointer<CXORM::Base::QueryBuilder> query) override {
     QueryResult collection;
 
     struct Callback {
-      QueryResult *coll;
+      QueryResult coll;
+
       static int callback(void *priv, int argc, char **values, char **names) {
         auto el = SharedPointer<Map<String, String>>::make();
         auto *cb = static_cast<Callback *>(priv);
@@ -59,7 +64,7 @@ public:
       }
     };
 
-    Callback cb{&collection};
+    Callback cb{collection};
     char *err_msg = nullptr;
 
     Core::Logging::LoggerManager::info("{}", query->compile().c_str());
@@ -87,19 +92,19 @@ private:
   Collection<String> restrictions;
 };
 
-SharedPointer<SQLiteDriver> operator>>(SharedPointer<SQLiteDriver> driver,
-                                       QueryResult &collection) {
+inline SharedPointer<SQLiteDriver>
+operator>>(SharedPointer<SQLiteDriver> driver, QueryResult collection) {
   auto query_string =
-      Modules::SQL::Base::QueryBuilder::create()->append_tag(driver->tags());
-  collection.append_range(driver->query(query_string));
+      CXORM::Base::QueryBuilder::create()->append_tag(driver->tags());
+  collection->append_range(*driver->query(query_string));
   return driver;
 }
 
-SharedPointer<SQLiteDriver>
+SharedPointer<SQLiteDriver> inline
 operator>>(SharedPointer<SQLiteDriver> driver,
-           const Modules::SQL::Base::QueryBuilder::Tag &tag) {
+           const CXORM::Base::QueryBuilder::Tag &tag) {
   driver->add_tag(tag);
   return driver;
 }
 
-} // namespace Modules::SQL::SQLite
+} // namespace CXORM::SQLite

@@ -8,6 +8,6 @@
 
 #pragma once
 
-namespace Modules::Serialization::Base {
+namespace CXORM::Serialization::Base {
 enum class TagPart { Start, End, DoNotApply };
 }

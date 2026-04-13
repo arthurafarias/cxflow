@@ -12,21 +12,26 @@
 #include "Core/Containers/String.hpp"
 #include "Core/Object.hpp"
 #include "Core/SharedPointer.hpp"
+#include "Modules/SQL/Base/AbstractDriver.hpp"
+#include "Modules/SQL/Base/QueryResult.hpp"
 #include "Utils/Patterns/Creator.hpp"
+#include "Modules/SQL/Base/SQLiteDataType.hpp"
 
 #include <format>
+#include <string>
 
-using namespace Core::Containers;
-using namespace Utils::Patterns;
+using namespace CXORM::Core;
+using namespace CXORM::Core::Containers;
+using namespace CXORM::Utils::Patterns;
 
 // I will handle this later gonna sleep now and see if tommorow I can create
 // some stuff really cool to in this direction!
 
-namespace Modules::SQL::Base {
+namespace CXORM::Base {
 
 class QueryBuilder : public EnableSharedFromThis<QueryBuilder>,
-                     public Utils::Patterns::Creator<QueryBuilder>,
-                     public Core::Object {
+                     public CXORM::Utils::Patterns::Creator<QueryBuilder>,
+                     public Object {
 public:
   class Tag {
   public:
@@ -63,6 +68,22 @@ public:
   template <typename... FormatTypes> SharedPointer<QueryBuilder> insert() {
     auto lock = query.acquire_lock();
     query.push_back(std::format("INSERT"));
+    return EnableSharedFromThis<QueryBuilder>::shared_from_this();
+  }
+
+  template <typename... FormatTypes> SharedPointer<QueryBuilder> fields_start() {
+    auto lock = query.acquire_lock();
+    return EnableSharedFromThis<QueryBuilder>::shared_from_this();
+  }
+
+  template <typename... FormatTypes> SharedPointer<QueryBuilder> field(const String& name, const SQLiteDataType& data_type) {
+    auto lock = query.acquire_lock();
+    query.push_back(std::format("{} {}", name, std::to_string(data_type)));
+    return EnableSharedFromThis<QueryBuilder>::shared_from_this();
+  }
+
+  template <typename... FormatTypes> SharedPointer<QueryBuilder> fields_end() {
+    auto lock = query.acquire_lock();
     return EnableSharedFromThis<QueryBuilder>::shared_from_this();
   }
 
@@ -174,9 +195,19 @@ public:
     return String::join(query, " ") + ";";
   }
 
+  QueryResult run(SharedPointer<AbstractDriver> driver) {
+    auto self = EnableSharedFromThis<QueryBuilder>::shared_from_this();
+
+    if (driver != nullptr) {
+      return driver->query(self);
+    }
+
+    return nullptr;
+  }
+
 private:
   Collection<String> query;
   Collection<String> values;
 };
 
-} // namespace Modules::SQL::Base
+} // namespace CXORM::Base

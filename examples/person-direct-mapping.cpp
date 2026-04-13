@@ -17,8 +17,9 @@
 #include <sqlite3.h>
 #include <string>
 
-using namespace Modules::Serialization::Base;
-using namespace Modules::SQL::SQLite;
+using namespace CXORM::Serialization::Base;
+using namespace CXORM::SQLite;
+using namespace CXORM;
 
 struct Person {
   int id;

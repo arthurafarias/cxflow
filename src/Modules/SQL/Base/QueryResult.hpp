@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include "Core/SharedPointer.hpp"
 #include <Core/Containers/String.hpp>
 #include <Core/Containers/Map.hpp>
 
-using namespace Core::Containers;
+using namespace CXORM::Core::Containers;
 
-namespace Modules::SQL::SQLite
-{
-using QueryResult = Collection<SharedPointer<Map<String, String>>>;
+namespace CXORM::Base {
+using QueryResult = SharedPointer<Collection<SharedPointer<Map<String, String>>>>;
 }

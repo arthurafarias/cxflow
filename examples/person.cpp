@@ -6,26 +6,39 @@
 // permission of the copyright holder.
 // ---------------------------------------------------------------------------
 
+#include "Core/SharedPointer.hpp"
+#include "Modules/SQL/Base/AbstractDriver.hpp"
 #include <Modules/SQL/Base/QueryBuilder.hpp>
+#include <Modules/SQL/Base/SQLiteDataType.hpp>
 #include <Modules/SQL/SQLite/SQLiteDriver.hpp>
 
 #include <format>
 
-using namespace Modules::SQL::Base;
-using namespace Modules::SQL::SQLite;
+using namespace CXORM::Base;
+using namespace CXORM::SQLite;
 
 int main(int argc, char *argv[]) {
-  auto db = SQLiteDriver("database.db");
 
-  auto query = QueryBuilder::create()
+  using namespace CXORM::SQLite;
+  SharedPointer<AbstractDriver> db = SQLiteDriver::create("database.db");
+
+  QueryBuilder::create()
+    ->create_table("Person")
+    ->fields_start()
+    ->field("id", SQLiteDataType::Integer)
+    ->field("name", SQLiteDataType::Text)
+    ->field("age", SQLiteDataType::Integer)
+    ->fields_end()
+    ;
+
+  auto result = QueryBuilder::create()
                    ->select("*")
                    ->from("Person")
                    ->order_by("id")
-                   ->limit("2");
+                   ->limit("2")
+                   ->run(db);
 
-  auto result = db.query(query);
-
-  for (auto ptr : result) {
+  for (auto ptr : *result) {
     auto row = *ptr;
     std::cout << std::format("ID: {}\t Name: {}\t\t Age: {}\n", row["id"].c_str(),
                              row["name"].c_str(), row["age"].c_str());

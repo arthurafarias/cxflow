@@ -19,7 +19,7 @@
 #include <memory>
 #include <stdexcept>
 
-using namespace Core::Containers;
+using namespace CXORM::Core::Containers;
 namespace Utils::Unix {
 
 class ShellManager {

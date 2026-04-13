@@ -10,6 +10,8 @@
 
 #include "Core/Object.hpp"
 #include <map>
+
+namespace CXORM::Core::Containers {
 template <typename... ArgsTypes>
 class Map : public std::map<ArgsTypes...>, public Core::Object {
 public:
@@ -17,8 +19,7 @@ public:
 
   template <typename... ConstructorArguments>
   Map(ConstructorArguments... args)
-      : std::map<ArgsTypes...>(
-            std::forward<ConstructorArguments>(args)...) {}
+      : std::map<ArgsTypes...>(std::forward<ConstructorArguments>(args)...) {}
 
   template <typename... ConstructorArguments>
   Map(const ConstructorArguments &...args)
@@ -30,3 +31,4 @@ public:
       : std::map<ArgsTypes...>(
             std::forward<const ConstructorArguments &&>(args)...) {}
 };
+} // namespace CXORM::Core::Containers

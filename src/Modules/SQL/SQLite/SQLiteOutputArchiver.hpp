@@ -13,10 +13,10 @@
 #include "Modules/Serialization/Base/KeyValueTag.hpp"
 #include "Modules/Serialization/Base/ObjectTag.hpp"
 
-using namespace Modules::Serialization::Base;
-using namespace Modules::SQL::Base;
+using namespace CXORM::Serialization::Base;
+using namespace CXORM::Base;
 
-namespace Modules::SQL::SQLite {
+namespace CXORM::SQLite {
 class SQLiteOutputArchiver : public SQLiteDriver {
 public:
   using SQLiteDriver::SQLiteDriver;
@@ -62,4 +62,4 @@ operator%(SQLiteOutputArchiver &ar, SharedPointer<KeyValueTag<String>> tag) {
   ar.expression->value(*tag->value);
   return ar;
 }
-} // namespace Modules::SQL::SQLite
+} // namespace CXORM::SQLite

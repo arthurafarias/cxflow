@@ -13,7 +13,7 @@
 
 #include <Core/Threading/ThreadPool.hpp>
 
-namespace Core::Threading {
+namespace CXORM::Core::Threading {
 template <typename... args_types> class AnonymousSignal {
 public:
   AnonymousSignal() = default;
@@ -69,4 +69,4 @@ private:
   std::list<slot_type> _sinks;
   ThreadPool &_ThreadPool = ThreadPool::get_instance();
 };
-} // namespace Core::Threading
+} // namespace CXORM::Core::Threading

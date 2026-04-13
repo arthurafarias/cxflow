@@ -10,8 +10,9 @@
 
 #include "Core/SharedPointer.hpp"
 #include <initializer_list>
+#include <memory>
 #include <utility>
-namespace Utils::Patterns {
+namespace CXORM::Utils::Patterns {
 
 template <typename DerivedType> class InitializerListCreator {
 public:
@@ -23,13 +24,13 @@ public:
   }
 };
 
-template <typename DerivedType> class Creator {
+template <typename DerivedType, typename AbstractType = DerivedType> class Creator {
 public:
   template <typename... DerivedConstructorArgumentsTypes>
-  static SharedPointer<DerivedType>
+  static SharedPointer<AbstractType>
   create(DerivedConstructorArgumentsTypes... args) {
-    return SharedPointer<DerivedType>(new DerivedType(
-        std::forward<DerivedConstructorArgumentsTypes>(args)...));
+    return std::dynamic_pointer_cast<AbstractType>(SharedPointer<DerivedType>(new DerivedType(
+        std::forward<DerivedConstructorArgumentsTypes>(args)...)));
   }
 };
-} // namespace Utils::Patterns
+} // namespace CXORM::Utils::Patterns

@@ -13,7 +13,7 @@
 #include <functional>
 #include <utility>
 
-namespace Core::Containers {
+namespace CXORM::Core::Containers {
 template <typename ContainedType>
 class Collection : public std::deque<ContainedType>, public Object {
 public:
@@ -34,4 +34,4 @@ public:
     return std::move(retval);
   }
 };
-} // namespace Core::Containers
+} // namespace CXORM::Core::Containers

@@ -18,9 +18,9 @@
 #include <queue>
 #include <thread>
 
-using namespace Core::Functional;
+using namespace CXORM::Core::Functional;
 
-namespace Core::Threading {
+namespace CXORM::Core::Threading {
 
 class ThreadPool {
 

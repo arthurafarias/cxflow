@@ -15,7 +15,7 @@
 #include <string>
 #include <utility>
 
-namespace Core::Containers {
+namespace CXORM::Core::Containers {
 
 class String : public std::string, public Object {
 
@@ -146,4 +146,4 @@ public:
   }
 };
 
-} // namespace Core::Containers
+} // namespace CXORM::Core::Containers

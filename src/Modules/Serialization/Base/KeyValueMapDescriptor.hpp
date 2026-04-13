@@ -11,9 +11,9 @@
 #include "Core/Containers/Collection.hpp"
 #include "Core/Containers/Variant.hpp"
 
-using namespace Core::Containers;
+using namespace CXORM::Core::Containers;
 
-namespace Modules::Serialization::Base {
+namespace CXORM::Serialization::Base {
 template <typename... ValueTypes>
 struct KeyValueMapDescriptor : Collection<Variant<ValueTypes...>> {};
 } // namespace Serialization

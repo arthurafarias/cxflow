@@ -12,9 +12,9 @@
 #include "Core/Threading/UniqueLock.hpp"
 #include <deque>
 
-namespace Core::Containers {
+namespace CXORM::Core::Containers {
 template <typename... ArgsTypes> class Tuple : public std::tuple<ArgsTypes...> {
 public:
   using std::tuple<ArgsTypes...>::tuple;
 };
-} // namespace Core::Containers
+} // namespace CXORM::Core::Containers

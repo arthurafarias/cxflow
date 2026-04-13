@@ -14,7 +14,7 @@
 
 #include <memory>
 
-namespace Core {
+namespace CXORM::Core {
 class Object {
 public:
   Object() : _mutex(SharedPointer<Mutex>(new Mutex())) {}
@@ -27,4 +27,4 @@ public:
 private:
   SharedPointer<Mutex> _mutex;
 };
-} // namespace Core
+} // namespace CXORM::Core

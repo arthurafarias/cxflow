@@ -15,7 +15,7 @@
 #include <Core/Containers/Collection.hpp>
 #include <Core/Containers/String.hpp>
 
-using namespace Core::Containers;
+using namespace CXORM::Core::Containers;
 
 namespace Utils::Unix {
 

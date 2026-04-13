@@ -18,7 +18,7 @@
 #include <Core/Logging/LoggerManager.hpp>
 #include <Core/Threading/ThreadPool.hpp>
 
-namespace Core::Threading {
+namespace CXORM::Core::Threading {
 
 template <typename sender_type, typename... args_types> class Signal {
 public:
@@ -96,6 +96,6 @@ protected:
   std::list<SlotType> _sinks;
   ThreadPool &_thread_pool = ThreadPool::get_instance();
 };
-} // namespace Core::Threading
+} // namespace CXORM::Core::Threading
 
 #endif

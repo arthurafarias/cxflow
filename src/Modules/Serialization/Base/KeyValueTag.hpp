@@ -12,7 +12,7 @@
 
 #include <format>
 
-namespace Modules::Serialization::Base {
+namespace CXORM::Serialization::Base {
 template <typename ValueType> struct KeyValueTag : TagBase {
   KeyValueTag() {}
   KeyValueTag(const String &name, ValueType* value)
@@ -23,4 +23,4 @@ template <typename ValueType> struct KeyValueTag : TagBase {
     return std::format("anonymous-{}", index++);
   }
 };
-} // namespace Modules::Serialization::Base
+} // namespace CXORM::Serialization::Base

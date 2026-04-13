@@ -12,10 +12,10 @@
 #include "Modules/Serialization/Base/KeyValueTag.hpp"
 #include "Modules/Serialization/Base/ObjectTag.hpp"
 
-using namespace Modules::Serialization::Base;
-using namespace Modules::SQL::Base;
+using namespace CXORM::Serialization::Base;
+using namespace CXORM::Base;
 
-namespace Modules::SQL::SQLite {
+namespace CXORM::SQLite {
 
 namespace {
 template <typename ValueType> ValueType from_string(const String &value);
@@ -48,7 +48,7 @@ SQLiteInputArchiver constexpr &operator%(SQLiteInputArchiver &ar,
                         ->order_by("id")
                         ->desc()
                         ->limit("1");
-    ar.result = ar.query(ar.expression).front();
+    ar.result = ar.query(ar.expression)->front();
   }
 
   if (tag->part == TagPart::End) {
@@ -87,4 +87,4 @@ operator%(SQLiteInputArchiver &ar, SharedPointer<KeyValueTag<String>> tag) {
   return ar;
 }
 
-} // namespace Modules::SQL::SQLite
+} // namespace CXORM::SQLite
