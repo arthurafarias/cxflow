@@ -6,11 +6,11 @@
 // permission of the copyright holder.
 // ---------------------------------------------------------------------------
 
-#include "Core/SharedPointer.hpp"
-#include "Modules/SQL/Base/AbstractDriver.hpp"
-#include <Modules/SQL/Base/QueryBuilder.hpp>
-#include <Modules/SQL/Base/SQLiteDataType.hpp>
-#include <Modules/SQL/SQLite/SQLiteDriver.hpp>
+#include "CXORM/Core/SharedPointer.hpp"
+#include "CXORM/Modules/SQL/Base/AbstractDriver.hpp"
+#include <CXORM/Modules/SQL/Base/QueryBuilder.hpp>
+#include <CXORM/Modules/SQL/Base/SQLiteDataType.hpp>
+#include <CXORM/Modules/SQL/SQLite/SQLiteDriver.hpp>
 
 #include <format>
 

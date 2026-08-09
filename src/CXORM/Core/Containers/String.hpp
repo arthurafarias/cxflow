@@ -1,0 +1,155 @@
+// ---------------------------------------------------------------------------
+// PROPRIETARY CODE – Arthur de Araújo Farias 2025
+// All rights reserved.  No part of this file may be reproduced, stored in a
+// retrieval system, or transmitted in any form or by any means—electronic,
+// mechanical, photocopying, recording, or otherwise—without the prior written
+// permission of the copyright holder.
+// ---------------------------------------------------------------------------
+
+#pragma once
+
+#include "CXORM/Core/Containers/Collection.hpp"
+#include "CXORM/Core/Object.hpp"
+#include "CXORM/Utils/Unused.hpp"
+#include <cctype>
+#include <string>
+#include <utility>
+
+namespace CXORM::Core::Containers {
+
+class String : public std::string, public Object {
+
+public:
+  using std::string::string;
+
+  String(const char *&other) : std::string(other) {}
+
+  String(const std::string &other) : std::string(other) {}
+
+  template <typename... ArgumentTypes>
+  String(const ArgumentTypes &&...args)
+      : std::string(std::forward<const ArgumentTypes>(args)...) {
+        ////
+        ////
+        ////
+        ////
+      }
+  inline static String join(const Collection<String> &collection,
+                            String delimiter) {
+
+    if (collection.size() == 0) {
+      return "";
+    }
+
+    String result = collection.front();
+
+    for (auto el = collection.begin() + 1; el < collection.end(); el++) {
+      result += delimiter + *el;
+    }
+
+    return result;
+  }
+
+  static inline String trim(const String &source) {
+    auto _left_trimmed = String::trim_left(source);
+    auto _right_trimmed = String::trim_left(_left_trimmed);
+    return String::trim_right(_right_trimmed);
+  }
+
+  static inline String trim_left(const String &source) {
+    size_t first = 0;
+    for (; first < source.size(); first++) {
+      if (std::isprint((source)[first])) {
+        break;
+      }
+    }
+
+    return source.substr(first);
+  }
+
+  static inline String trim_right(const String &source) {
+    if (source.empty())
+      return source; // Handle empty string edge case
+    int end = source.size() - 1;
+    for (; end >= 0; end--) {
+      if (std::isprint((source)[end])) {
+        break;
+      }
+      if (end == 0)
+        break; // Prevents underflow on unsigned size_t
+    }
+
+    return source.substr(0,
+                         end + 1); // end + 1 because substr length is exclusive
+  }
+
+  static inline Collection<String> split(String haystack, String needle) {
+    Collection<String> splitted;
+    size_t position_last = 0;
+    size_t position = 0;
+
+    while ((position = haystack.find(needle, position)) != (size_t)(-1)) {
+      auto element = String::trim(
+          haystack.substr(position_last, position - position_last));
+      splitted.push_back(element);
+      position_last = position + needle.length(); // Skip past the needle
+      position++; // Move past the needle for the next search
+    }
+
+    // Add the remainder of the string after the last split
+    if (position_last < haystack.size()) {
+      auto element = String::trim(haystack.substr(position_last));
+      splitted.push_back(element);
+    }
+
+    return splitted;
+  }
+
+  static inline Collection<String> split(String haystack,
+                                         Collection<String> needles) {
+    Collection<String> splitted;
+    size_t position_last = 0;
+    size_t position = 0;
+    String needle = "";
+
+    auto find_any = [](const String haystack, Collection<String> needles,
+                       size_t position = 0) -> std::tuple<int, String> {
+      UNUSED(position);
+      for (auto needle : needles) {
+        auto pos = haystack.find(needle);
+        if (pos == npos) {
+          return {pos, needle};
+        }
+      }
+      return {-1, ""};
+    };
+
+    for (;;) {
+      auto result = find_any(haystack, needles, position);
+      position = std::get<0>(result);
+      needle = std::get<1>(result);
+
+      if (position == npos) {
+        break;
+      }
+
+      auto element = String::trim(
+          haystack.substr(position_last, position - position_last));
+
+      splitted.push_back(element);
+
+      position_last = position + needle.length(); // Skip past the needle
+      position++; // Move past the needle for the next search
+    }
+
+    // Add the remainder of the string after the last split
+    if (position_last < haystack.size()) {
+      auto element = String::trim(haystack.substr(position_last));
+      splitted.push_back(element);
+    }
+
+    return splitted;
+  }
+};
+
+} // namespace CXORM::Core::Containers

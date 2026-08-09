@@ -6,14 +6,14 @@
 // permission of the copyright holder.
 // ---------------------------------------------------------------------------
 
-#include "Modules/SQL/Base/QueryBuilder.hpp"
-#include <Core/Logging/LoggerManager.hpp>
+#include "CXORM/Modules/SQL/Base/QueryBuilder.hpp"
+#include <CXORM/Core/Logging/LoggerManager.hpp>
 
-#include <Modules/Serialization/Base/AbstractArchiver.hpp>
+#include <CXORM/Modules/Serialization/Base/AbstractArchiver.hpp>
 #include <cassert>
 
-#include <Modules/SQL/SQLite/SQLiteInputArchiver.hpp>
-#include <Modules/SQL/SQLite/SQLiteOutputArchiver.hpp>
+#include <CXORM/Modules/SQL/SQLite/SQLiteInputArchiver.hpp>
+#include <CXORM/Modules/SQL/SQLite/SQLiteOutputArchiver.hpp>
 
 #include <exception>
 #include <iostream>
