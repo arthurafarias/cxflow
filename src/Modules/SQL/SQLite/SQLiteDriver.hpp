@@ -13,6 +13,7 @@
 #include "Modules/SQL/Base/AbstractDriver.hpp"
 #include "Modules/SQL/Base/QueryBuilder.hpp"
 #include "Modules/SQL/Base/QueryResult.hpp"
+#include "Modules/SQL/SQLite/SQLiteCursor.hpp"
 #include <Core/Containers/String.hpp>
 #include <Core/Exceptions/RuntimeException.hpp>
 #include <Utils/Patterns/Creator.hpp>
@@ -46,7 +47,7 @@ public:
 
   virtual QueryResult
   query(SharedPointer<CXORM::Base::QueryBuilder> query) override {
-    QueryResult collection;
+    QueryResult collection = QueryResult::make();
 
     struct Callback {
       QueryResult coll;
@@ -78,6 +79,15 @@ public:
     }
 
     return collection;
+  }
+
+  // Lazy counterpart to query(): steps the result set row by row via a
+  // prepared statement instead of collecting everything up front, and
+  // returns it as a std::ranges::view (see SQLiteCursor) so it can be
+  // filtered/transformed/paged with standard range adaptors.
+  SQLiteCursor cursor(SharedPointer<CXORM::Base::QueryBuilder> query) {
+    Core::Logging::LoggerManager::info("{}", query->compile().c_str());
+    return SQLiteCursor(db, query->compile());
   }
 
   String tags() { return String::join(restrictions, " "); }

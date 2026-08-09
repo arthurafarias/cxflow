@@ -78,12 +78,13 @@ public:
 
   template <typename... FormatTypes> SharedPointer<QueryBuilder> field(const String& name, const SQLiteDataType& data_type) {
     auto lock = query.acquire_lock();
-    query.push_back(std::format("{} {}", name, std::to_string(data_type)));
+    fields.push_back(std::format("{} {}", name.c_str(), std::to_string(data_type)));
     return EnableSharedFromThis<QueryBuilder>::shared_from_this();
   }
 
   template <typename... FormatTypes> SharedPointer<QueryBuilder> fields_end() {
     auto lock = query.acquire_lock();
+    query.push_back(std::format("({})", String::join(fields, ",").c_str()));
     return EnableSharedFromThis<QueryBuilder>::shared_from_this();
   }
 
@@ -185,6 +186,15 @@ public:
     return EnableSharedFromThis<QueryBuilder>::shared_from_this();
   }
 
+  template <typename... FormatTypes>
+  SharedPointer<QueryBuilder>
+  offset(const std::format_string<FormatTypes...> &fmt, FormatTypes &&...args) {
+    auto lock = query.acquire_lock();
+    auto compiled = std::format(fmt, std::forward<FormatTypes>(args)...);
+    query.push_back(std::format("OFFSET {}", compiled));
+    return EnableSharedFromThis<QueryBuilder>::shared_from_this();
+  }
+
   SharedPointer<QueryBuilder> append_tag(const String &tag) {
     query.push_back(tag);
     return EnableSharedFromThis<QueryBuilder>::shared_from_this();
@@ -205,8 +215,19 @@ public:
     return nullptr;
   }
 
+  // Lazy, driver-agnostic counterpart to run(): hands the compiled query to
+  // any driver exposing a `cursor(SharedPointer<QueryBuilder>)` member (e.g.
+  // SQLiteDriver) and returns its lazy, ranges-compatible result. Templated
+  // rather than typed against AbstractDriver so Base stays free of any
+  // concrete driver's row/cursor representation.
+  template <typename DriverType> auto cursor(DriverType &driver) {
+    auto self = EnableSharedFromThis<QueryBuilder>::shared_from_this();
+    return driver.cursor(self);
+  }
+
 private:
   Collection<String> query;
+  Collection<String> fields;
   Collection<String> values;
 };
 

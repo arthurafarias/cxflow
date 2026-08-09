@@ -22,12 +22,18 @@ class String : public std::string, public Object {
 public:
   using std::string::string;
 
+  String(const char *&other) : std::string(other) {}
+
   String(const std::string &other) : std::string(other) {}
 
   template <typename... ArgumentTypes>
   String(const ArgumentTypes &&...args)
-      : std::string(std::forward<const ArgumentTypes>(args)...) {}
-
+      : std::string(std::forward<const ArgumentTypes>(args)...) {
+        ////
+        ////
+        ////
+        ////
+      }
   inline static String join(const Collection<String> &collection,
                             String delimiter) {
 
