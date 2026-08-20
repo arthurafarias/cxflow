@@ -16,6 +16,7 @@
 
 #include <CXORM/Core/Containers/String.hpp>
 #include <CXORM/Modules/SQL/Base/QueryBuilder.hpp>
+#include <CXORM/Modules/SQL/Base/SQLiteDataType.hpp>
 #include <CXORM/Modules/SQL/SQLite/SQLiteDriver.hpp>
 
 #include <filesystem>

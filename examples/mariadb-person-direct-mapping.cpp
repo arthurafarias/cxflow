@@ -6,24 +6,31 @@
 // permission of the copyright holder.
 // ---------------------------------------------------------------------------
 
+// MariaDB counterpart to person-direct-mapping.cpp: same Person struct,
+// same operator%, same cursor/range-adaptor usage - only the driver,
+// archivers, column-type enum, and Row type differ. Needs a real MariaDB/
+// MySQL server reachable at the host/port below with a database already
+// created (`CREATE DATABASE cxorm_example;`); adjust the connection
+// parameters for your environment before running.
+
 #include "CXORM/Modules/SQL/Base/QueryBuilder.hpp"
 #include <CXORM/Core/Logging/LoggerManager.hpp>
-#include <CXORM/Modules/SQL/Base/SQLiteDataType.hpp>
+#include <CXORM/Modules/SQL/Base/MariaDBDataType.hpp>
 
 #include <CXORM/Modules/Serialization/Base/AbstractArchiver.hpp>
 #include <cassert>
 
-#include <CXORM/Modules/SQL/SQLite/SQLiteInputArchiver.hpp>
-#include <CXORM/Modules/SQL/SQLite/SQLiteOutputArchiver.hpp>
+#include <CXORM/Modules/SQL/MariaDB/MariaDBInputArchiver.hpp>
+#include <CXORM/Modules/SQL/MariaDB/MariaDBOutputArchiver.hpp>
 
 #include <exception>
 #include <iostream>
+#include <mysql.h>
 #include <ranges>
-#include <sqlite3.h>
 #include <string>
 
 using namespace CXORM::Serialization::Base;
-using namespace CXORM::SQLite;
+using namespace CXORM::MariaDB;
 using namespace CXORM;
 
 struct Person {
@@ -48,19 +55,21 @@ int main(int argc, char *argv[]) {
   Core::Logging::LoggerManager::stream_set(
       Core::Logging::LoggerManager::stream_cout());
   {
-    auto output = SQLiteOutputArchiver("database.db");
+    auto output =
+        MariaDBOutputArchiver("127.0.0.1", "root", "", "cxorm_example", 3306);
     try {
       output.query(QueryBuilder::create()
                        ->create_table("IF NOT EXISTS Person")
                        ->fields_start()
-                       ->field("id", SQLiteDataType::Integer)
-                       ->field("name", SQLiteDataType::Text)
-                       ->field("age", SQLiteDataType::Integer)
+                       ->field("id", MariaDBDataType::Integer)
+                       ->field("name", MariaDBDataType::Text)
+                       ->field("age", MariaDBDataType::Integer)
                        ->fields_end());
 
-      // Lazily stream rows from SQLite (one sqlite3_step at a time) and
-      // compose the result with standard range adaptors: filter, transform,
-      // and take, exactly as you would with any other C++ range.
+      // Lazily stream rows from MariaDB (one mysql_fetch_row at a time via
+      // mysql_use_result) and compose the result with standard range
+      // adaptors: filter, transform, and take, exactly as you would with
+      // any other C++ range - same code shape as the SQLite example.
       auto adults =
           QueryBuilder::create()->select("*")->from("Person")->cursor(output)
           | std::views::filter([](const Row &row) {
@@ -97,7 +106,8 @@ int main(int argc, char *argv[]) {
   }
 
   {
-    auto output = SQLiteOutputArchiver("database.db");
+    auto output =
+        MariaDBOutputArchiver("127.0.0.1", "root", "", "cxorm_example", 3306);
     auto person = Person();
     person.name = "Arthur";
     person.age = 36;
@@ -105,7 +115,8 @@ int main(int argc, char *argv[]) {
   }
 
   {
-    auto input = SQLiteInputArchiver("database.db");
+    auto input =
+        MariaDBInputArchiver("127.0.0.1", "root", "", "cxorm_example", 3306);
     auto person = Person();
     input % person;
     Core::Logging::LoggerManager::info("{} {} {}", person.id,

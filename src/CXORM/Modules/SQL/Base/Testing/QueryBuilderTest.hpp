@@ -10,6 +10,7 @@
 
 #include <CXORM/Core/Containers/String.hpp>
 #include <CXORM/Modules/SQL/Base/QueryBuilder.hpp>
+#include <CXORM/Modules/SQL/Base/SQLiteDataType.hpp>
 #include <CXORM/Testing/TestGroup.hpp>
 
 namespace CXORM::Base::Testing {

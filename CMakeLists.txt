@@ -14,18 +14,44 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 find_package(SQLite3 REQUIRED)
 
+# MariaDB support (src/CXORM/Modules/SQL/MariaDB) is optional: no CMake
+# config/pkg-config file ships with mariadb-libs on most distros, so this
+# looks for the client library and its mysql.h headers directly rather than
+# requiring a find module. When it's missing, the MariaDB module's headers,
+# example, and Testing/ facilities are simply left out of the build instead
+# of failing it - SQLite-only consumers shouldn't need MariaDB installed.
+find_library(MARIADB_CLIENT_LIBRARY NAMES mariadb mysqlclient)
+find_path(MARIADB_INCLUDE_DIR NAMES mysql.h PATH_SUFFIXES mysql mariadb)
+
+if(MARIADB_CLIENT_LIBRARY AND MARIADB_INCLUDE_DIR)
+  set(CXORM_HAVE_MARIADB TRUE)
+  message(STATUS "cxorm: MariaDB client found (${MARIADB_CLIENT_LIBRARY}) - building CXORM::MariaDB")
+else()
+  set(CXORM_HAVE_MARIADB FALSE)
+  message(STATUS "cxorm: MariaDB client not found - CXORM::MariaDB will not be built. "
+                 "Install mariadb-libs (or mariadb-connector-c) and reconfigure to enable it.")
+endif()
+
 include(CMakePackageConfigHelpers)
 
 file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES src/*.cpp src/*.hpp)
 # Testing/ subtrees (the self-hosted test facility - see below) are test-only
 # code and never ship as part of libcxorm.
 list(FILTER ${PROJECT_NAME}_SOURCES EXCLUDE REGEX "/Testing/")
+if(NOT CXORM_HAVE_MARIADB)
+  list(FILTER ${PROJECT_NAME}_SOURCES EXCLUDE REGEX "/MariaDB/")
+endif()
 
 add_library(${PROJECT_NAME} SHARED
 ${${PROJECT_NAME}_SOURCES}
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC SQLite::SQLite3)
+
+if(CXORM_HAVE_MARIADB)
+  target_include_directories(${PROJECT_NAME} PUBLIC ${MARIADB_INCLUDE_DIR})
+  target_link_libraries(${PROJECT_NAME} PUBLIC ${MARIADB_CLIENT_LIBRARY})
+endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
@@ -98,6 +124,9 @@ if(CXORM_BUILD_TESTS)
   set(CXORM_TEST_HEADERS "")
   foreach(header ${CXORM_ALL_HEADERS})
     if(header MATCHES "/Testing/" AND NOT header MATCHES "/CXORM/Testing/")
+      if(header MATCHES "/MariaDB/" AND NOT CXORM_HAVE_MARIADB)
+        continue()
+      endif()
       list(APPEND CXORM_TEST_HEADERS ${header})
     endif()
   endforeach()

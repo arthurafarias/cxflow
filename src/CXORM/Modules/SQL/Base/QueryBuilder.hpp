@@ -15,7 +15,6 @@
 #include "CXORM/Modules/SQL/Base/AbstractDriver.hpp"
 #include "CXORM/Modules/SQL/Base/QueryResult.hpp"
 #include "CXORM/Utils/Patterns/Creator.hpp"
-#include "CXORM/Modules/SQL/Base/SQLiteDataType.hpp"
 
 #include <format>
 #include <string>
@@ -76,9 +75,21 @@ public:
     return EnableSharedFromThis<QueryBuilder>::shared_from_this();
   }
 
-  template <typename... FormatTypes> SharedPointer<QueryBuilder> field(const String& name, const SQLiteDataType& data_type) {
+  // Generic over the column-type enum so each driver can supply its own
+  // (e.g. SQLiteDataType, MariaDBDataType) via an ADL-found to_string(const
+  // DataType&) overload declared alongside the enum itself, rather than
+  // QueryBuilder - which is meant to stay driver-agnostic (see
+  // AbstractDriver/QueryResult) - being hard-wired to one backend's type
+  // system. Deliberately unqualified (not std::to_string): a qualified call
+  // is looked up once, at this template's definition point, so it would
+  // only see whichever DataType header happened to be #included before
+  // QueryBuilder.hpp in a given translation unit. The unqualified form is a
+  // dependent call, so ADL runs at instantiation time and finds the right
+  // overload regardless of include order.
+  template <typename DataType>
+  SharedPointer<QueryBuilder> field(const String &name, const DataType &data_type) {
     auto lock = query.acquire_lock();
-    fields.push_back(std::format("{} {}", name.c_str(), std::to_string(data_type)));
+    fields.push_back(std::format("{} {}", name.c_str(), to_string(data_type)));
     return EnableSharedFromThis<QueryBuilder>::shared_from_this();
   }
 
