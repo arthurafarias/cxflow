@@ -6,9 +6,30 @@
 // permission of the copyright holder.
 // ---------------------------------------------------------------------------
 
-@PACKAGE_INIT@
+#pragma once
 
-include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+#include <exception>
+#include <memory>
+#include <string>
 
-# Optional: set include directory
-set_and_check(${PROJECT_NAME}_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@")
+namespace media::streamer {
+
+class element;
+
+enum class message_type {
+  state_changed,
+  eos,
+  error,
+  warning,
+  info,
+  buffering,
+};
+
+struct message {
+  message_type type;
+  std::weak_ptr<element> source;
+  std::string debug_info;
+  std::exception_ptr error; // populated for message_type::error/warning
+};
+
+} // namespace media::streamer

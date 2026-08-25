@@ -6,9 +6,25 @@
 // permission of the copyright holder.
 // ---------------------------------------------------------------------------
 
-@PACKAGE_INIT@
+#pragma once
 
-include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+namespace media::streamer {
 
-# Optional: set include directory
-set_and_check(${PROJECT_NAME}_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@")
+// Ordered null < ready < paused < playing - element::set_state() walks
+// adjacent steps in this order, and bin propagates to children sink-first
+// on the way up, source-first on the way down.
+enum class state {
+  null,
+  ready,
+  paused,
+  playing,
+};
+
+enum class state_change_return {
+  failure,
+  success,
+  async,
+  no_preroll,
+};
+
+} // namespace media::streamer

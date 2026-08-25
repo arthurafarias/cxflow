@@ -6,17 +6,5 @@
 ## permission of the copyright holder.
 ## ---------------------------------------------------------------------------
 
-add_executable(${PROJECT_NAME}-examples-person person.cpp)
-target_link_libraries(${PROJECT_NAME}-examples-person PUBLIC cxorm)
-
-add_executable(${PROJECT_NAME}-examples-person-direct-mapping person-direct-mapping.cpp)
-target_link_libraries(${PROJECT_NAME}-examples-person-direct-mapping PUBLIC cxorm)
-
-if(CXORM_HAVE_MARIADB)
-  add_executable(${PROJECT_NAME}-examples-mariadb-person mariadb-person.cpp)
-  target_link_libraries(${PROJECT_NAME}-examples-mariadb-person PUBLIC cxorm)
-
-  add_executable(${PROJECT_NAME}-examples-mariadb-person-direct-mapping
-    mariadb-person-direct-mapping.cpp)
-  target_link_libraries(${PROJECT_NAME}-examples-mariadb-person-direct-mapping PUBLIC cxorm)
-endif()
+add_executable(fake_pipeline fake_pipeline.cpp)
+target_link_libraries(fake_pipeline PRIVATE media-streamer)

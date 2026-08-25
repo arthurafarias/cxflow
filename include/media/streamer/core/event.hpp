@@ -6,9 +6,21 @@
 // permission of the copyright holder.
 // ---------------------------------------------------------------------------
 
-@PACKAGE_INIT@
+#pragma once
 
-include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+namespace media::streamer {
 
-# Optional: set include directory
-set_and_check(${PROJECT_NAME}_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@")
+// segment is deliberately omitted for now: nothing in the core or the
+// default elements produces or consumes it yet (no seeking support). Add it
+// back when seeking lands rather than modeling an unused tag today.
+enum class event_type {
+  flush_start,
+  flush_stop,
+  eos,
+};
+
+struct event {
+  event_type type;
+};
+
+} // namespace media::streamer

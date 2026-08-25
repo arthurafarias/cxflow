@@ -7,73 +7,41 @@
 ## ---------------------------------------------------------------------------
 
 cmake_minimum_required(VERSION 3.16)
-project(cxorm VERSION 0.1.0)
+project(media-streamer VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(SQLite3 REQUIRED)
-
-# MariaDB support (src/CXORM/Modules/SQL/MariaDB) is optional: no CMake
-# config/pkg-config file ships with mariadb-libs on most distros, so this
-# looks for the client library and its mysql.h headers directly rather than
-# requiring a find module. When it's missing, the MariaDB module's headers,
-# example, and Testing/ facilities are simply left out of the build instead
-# of failing it - SQLite-only consumers shouldn't need MariaDB installed.
-find_library(MARIADB_CLIENT_LIBRARY NAMES mariadb mysqlclient)
-find_path(MARIADB_INCLUDE_DIR NAMES mysql.h PATH_SUFFIXES mysql mariadb)
-
-if(MARIADB_CLIENT_LIBRARY AND MARIADB_INCLUDE_DIR)
-  set(CXORM_HAVE_MARIADB TRUE)
-  message(STATUS "cxorm: MariaDB client found (${MARIADB_CLIENT_LIBRARY}) - building CXORM::MariaDB")
-else()
-  set(CXORM_HAVE_MARIADB FALSE)
-  message(STATUS "cxorm: MariaDB client not found - CXORM::MariaDB will not be built. "
-                 "Install mariadb-libs (or mariadb-connector-c) and reconfigure to enable it.")
-endif()
+find_package(Threads REQUIRED)
 
 include(CMakePackageConfigHelpers)
 
-file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES src/*.cpp src/*.hpp)
-# Testing/ subtrees (the self-hosted test facility - see below) are test-only
-# code and never ship as part of libcxorm.
-list(FILTER ${PROJECT_NAME}_SOURCES EXCLUDE REGEX "/Testing/")
-if(NOT CXORM_HAVE_MARIADB)
-  list(FILTER ${PROJECT_NAME}_SOURCES EXCLUDE REGEX "/MariaDB/")
-endif()
+file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 
 add_library(${PROJECT_NAME} SHARED
-${${PROJECT_NAME}_SOURCES}
+  ${${PROJECT_NAME}_SOURCES}
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC SQLite::SQLite3)
-
-if(CXORM_HAVE_MARIADB)
-  target_include_directories(${PROJECT_NAME} PUBLIC ${MARIADB_INCLUDE_DIR})
-  target_link_libraries(${PROJECT_NAME} PUBLIC ${MARIADB_CLIENT_LIBRARY})
-endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
 )
-
-target_compile_definitions(${PROJECT_NAME} PUBLIC "cxorm_BASE_SOURCE_PREFIX=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
-target_compile_definitions(${PROJECT_NAME} PUBLIC "cxorm_BASE_INSTALL_PREFIX=\"${CMAKE_INSTALL_PREFIX}\"")
 
 install(TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}Targets
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include/${PROJECT_NAME}
+    INCLUDES DESTINATION include
 )
 
 # Install header files
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/
-    DESTINATION lib/${PROJECT_NAME}/headers
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    DESTINATION include
     FILES_MATCHING
-        PATTERN "*.h"
         PATTERN "*.hpp"
 )
 
@@ -106,45 +74,25 @@ install(FILES
 
 add_subdirectory(examples)
 
-# Self-hosted test facility: every class may ship an inline TestGroup next
-# to its header, under a sibling Testing/ subdirectory - e.g.
-# src/CXORM/Core/Containers/Testing/StringTest.hpp, namespace
-# CXORM::Core::Containers::Testing. No external test framework: cxorm stays
-# dependency-free beyond the STL (and SQLite3, for the SQL modules).
-#
-# Discovery is automatic: every *.hpp under a Testing/ directory anywhere in
-# src/CXORM (other than the framework's own home, src/CXORM/Testing/) is
-# swept into a generated translation unit that #includes all of them, so
-# their `inline static TestGroup` definitions self-register into
-# CXORM::Testing::Registry before main() runs. CONFIGURE_DEPENDS means
-# adding a new *Test.hpp triggers CMake to pick it up on the next build.
-option(CXORM_BUILD_TESTS "Build cxorm's self-hosted test facility" ON)
-if(CXORM_BUILD_TESTS)
-  file(GLOB_RECURSE CXORM_ALL_HEADERS CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/CXORM/*.hpp)
-  set(CXORM_TEST_HEADERS "")
-  foreach(header ${CXORM_ALL_HEADERS})
-    if(header MATCHES "/Testing/" AND NOT header MATCHES "/CXORM/Testing/")
-      if(header MATCHES "/MariaDB/" AND NOT CXORM_HAVE_MARIADB)
-        continue()
-      endif()
-      list(APPEND CXORM_TEST_HEADERS ${header})
-    endif()
-  endforeach()
+# Self-hosted test facility: no external test framework (gtest/catch2/etc),
+# media-streamer stays dependency-free beyond the STL. Every tests/**/*.cpp
+# (other than tests/framework/ itself) is compiled straight into one test
+# binary; each declares a self-registering `test_group` at file scope (see
+# tests/framework/test_group.hpp) so main.cpp needs no knowledge of what
+# tests exist. CONFIGURE_DEPENDS means adding a new tests/**/*.cpp triggers
+# CMake to pick it up on the next build.
+option(MEDIA_STREAMER_BUILD_TESTS "Build media-streamer's self-hosted test facility" ON)
+if(MEDIA_STREAMER_BUILD_TESTS)
+  file(GLOB_RECURSE MEDIA_STREAMER_TEST_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp)
+  list(FILTER MEDIA_STREAMER_TEST_SOURCES EXCLUDE REGEX "/tests/framework/")
 
-  set(CXORM_TEST_INCLUDES_FILE ${CMAKE_CURRENT_BINARY_DIR}/cxorm_test_includes.cpp)
-  set(CXORM_TEST_INCLUDES_CONTENT "// Generated by CMake: includes every discovered per-class test facility.\n")
-  foreach(header ${CXORM_TEST_HEADERS})
-    file(RELATIVE_PATH header_rel ${CMAKE_CURRENT_SOURCE_DIR}/src ${header})
-    string(APPEND CXORM_TEST_INCLUDES_CONTENT "#include <${header_rel}>\n")
-  endforeach()
-  file(WRITE ${CXORM_TEST_INCLUDES_FILE} "${CXORM_TEST_INCLUDES_CONTENT}")
-
-  add_executable(cxorm-tests
-    src/CXORM/Testing/main.cpp
-    ${CXORM_TEST_INCLUDES_FILE}
+  add_executable(${PROJECT_NAME}-tests
+    tests/framework/main.cpp
+    ${MEDIA_STREAMER_TEST_SOURCES}
   )
-  target_link_libraries(cxorm-tests PRIVATE ${PROJECT_NAME})
+  target_include_directories(${PROJECT_NAME}-tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/framework)
+  target_link_libraries(${PROJECT_NAME}-tests PRIVATE ${PROJECT_NAME})
 
   enable_testing()
-  add_test(NAME cxorm-tests COMMAND cxorm-tests)
+  add_test(NAME ${PROJECT_NAME}-tests COMMAND ${PROJECT_NAME}-tests)
 endif()

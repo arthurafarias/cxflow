@@ -6,9 +6,22 @@
 // permission of the copyright holder.
 // ---------------------------------------------------------------------------
 
-@PACKAGE_INIT@
+#include <media/streamer/core/structure.hpp>
 
-include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+namespace media::streamer {
 
-# Optional: set include directory
-set_and_check(${PROJECT_NAME}_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@")
+bool structure::is_compatible_with(const structure &other) const {
+  if (name_ != other.name_) {
+    return false;
+  }
+
+  for (const auto &[field, value] : fields_) {
+    if (const auto *other_value = other.get(field); other_value != nullptr && *other_value != value) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+} // namespace media::streamer

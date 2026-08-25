@@ -6,9 +6,16 @@
 // permission of the copyright holder.
 // ---------------------------------------------------------------------------
 
-@PACKAGE_INIT@
+#pragma once
 
-include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+namespace media::streamer {
 
-# Optional: set include directory
-set_and_check(${PROJECT_NAME}_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@")
+enum class flow_return {
+  ok,
+  not_linked,
+  flushing,
+  eos,
+  error,
+};
+
+} // namespace media::streamer
