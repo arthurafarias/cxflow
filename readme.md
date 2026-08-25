@@ -1,150 +1,170 @@
-# CXORM
+<picture>
+  <source srcset="docs.src/resources/logo-composed-black.png" media="(prefers-color-scheme: dark)">
+  <img src="docs.src/resources/logo-composed-light.png" alt="CXFlow" height="72">
+</picture>
 
-![cxorm](misc/images/logo-banner-path.svg)
+CXFlow is a header-only, GStreamer-inspired dataflow pipeline framework for C++23.
+Pipelines are built from **elements** connected by **pads**: a source pushes
+`buffer`s downstream, sinks and filters consume and forward them, and
+out-of-band control flows through **events** (in-band, pad-to-pad) and
+**messages** (posted to a pipeline's **bus**, drained by the application).
 
-cxorm is an experimental ORM (Object Relational Model) that aims to simplify at minimum a ORM development using C++. Instead of using complex data mappings on objects. Here we rely on `Map<String,String>` where the first is the head and the second is the field.
-
-The design is brand new and the project in an early conceptual stage. Many features are still under exploration.
-
-The example below shows a query being built and executed by the driver. The result is presented in a collection of Maps. Memory usage wasn't taken into account, just usability for now. If you want to contribute with some optimizations over the algorithm. Feel free to contribute in the issues channel.
+The project is in an early conceptual stage — the current pass proves the core
+loop end-to-end (pad linking, task-driven push scheduling, state propagation,
+and the bus/event/message split) with a minimal set of elements. Many features
+are still under exploration. Contributions and design ideas are welcome via
+the issues channel.
 
 # Table of Contents
 
-- [Usage](#Usage)
-- [Contributing](#Contributing)
-- [License](#License)
+- [Getting Started](#getting-started)
+- [Core Concepts](#core-concepts)
+- [Elements](#elements)
+- [Bus & Messaging](#bus--messaging)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [License](#license)
 
-# Usage
+# Getting Started
 
-Before starting, create a simple database in sqlite3 like the following:
+CXFlow is header-only, so there's nothing to build or link against — just
+point your compiler at `include/`.
 
-```sql
-.open database.db
-CREATE TABLE Person(id INTEGER, name BLOB, age INTEGER);
-INSERT INTO Person VALUES(0, 'Arthur', 35);
-```
-
-In a text file write following and then write in C++:
+The example below wires three elements into `fake_src ! identity ! fake_sink`,
+runs it to end-of-stream, and reports how many buffers the sink saw:
 
 ```c++
-#include <Modules/SQL/Base/QueryBuilder.hpp>
-#include <Modules/SQL/SQLite/SQLiteDriver.hpp>
+#include <chrono>
+#include <iostream>
 
-#include <format>
+#include <cxflow/core/element_factory.hpp>
+#include <cxflow/core/message.hpp>
+#include <cxflow/core/pad.hpp>
+#include <cxflow/core/pipeline.hpp>
+#include <cxflow/core/state.hpp>
+#include <cxflow/elements/fake_sink.hpp>
+#include <cxflow/elements/fake_src.hpp>
+#include <cxflow/elements/identity.hpp>
 
-using namespace CXORM::Base;
-using namespace CXORM::SQLite;
+using namespace media::streamer;
+using namespace media::streamer::elements;
 
-int main(int argc, char *argv[]) {
-  auto db = SQLiteDriver("database.db");
+int main() {
+  fake_src::register_type();
+  identity::register_type();
+  fake_sink::register_type();
 
-  auto query = QueryBuilder::create()
-                   ->select("*")
-                   ->from("Person")
-                   ->order_by("id")
-                   ->limit("2");
+  pipeline pipe("fake-pipeline");
 
-  auto result = db.query(query);
+  auto src = element_factory::create("fake_src", "src");
+  auto id = element_factory::create("identity", "id");
+  auto sink = element_factory::create("fake_sink", "sink");
 
-  for (auto ptr : result) {
-    auto row = *ptr;
-    std::cout << std::format("ID: {}\t Name: {}\t\t Age: {}\n", row["id"].c_str(),
-                             row["name"].c_str(), row["age"].c_str());
+  auto *src_impl = static_cast<fake_src *>(src.get());
+  src_impl->set_num_buffers(10);
+  src_impl->set_interval(std::chrono::milliseconds(20));
+
+  pipe.add(src);
+  pipe.add(id);
+  pipe.add(sink);
+
+  if (!src->get_static_pad("src")->link(*id->get_static_pad("sink")) ||
+      !id->get_static_pad("src")->link(*sink->get_static_pad("sink"))) {
+    std::cerr << "failed to link pipeline\n";
+    return 1;
   }
+
+  pipe.set_state(state::playing);
+
+  bool running = true;
+  while (running) {
+    auto msg = pipe.bus().pop(std::chrono::milliseconds(500));
+    if (!msg.has_value()) {
+      continue;
+    }
+
+    switch (msg->type) {
+    case message_type::eos:
+      std::cout << "EOS received\n";
+      running = false;
+      break;
+    case message_type::error:
+      std::cerr << "error: " << msg->debug_info << "\n";
+      running = false;
+      break;
+    default:
+      break;
+    }
+  }
+
+  pipe.set_state(state::null);
+
+  auto *sink_impl = static_cast<fake_sink *>(sink.get());
+  std::cout << "buffers received: " << sink_impl->buffers_received() << "\n";
 
   return 0;
 }
 ```
 
-```bash
-g++ -std=c++23 -Isrc examples/person.cpp -o cxorm_person_example -lsqlite3
-```
-
-After executing the code you will produce the following output
-
-```
-ID: 0    Name: Arthur de Araújo Farias           Age: 35
-```
-
-You also can use serialization module to match model directly using an Input or output archiver.
-
-```
-#include <Core/Logging/LoggerManager.hpp>
-
-#include <Modules/Serialization/Base/AbstractArchiver.hpp>
-#include <cassert>
-
-#include <Modules/SQL/SQLite/SQLiteInputArchiver.hpp>
-#include <Modules/SQL/SQLite/SQLiteOutputArchiver.hpp>
-
-#include <sqlite3.h>
-#include <string>
-
-using namespace CXORM::Serialization::Base;
-using namespace CXORM::SQLite;
-
-struct Person {
-  int id;
-  String name;
-  int age;
-};
-
-template <typename Archiver> Archiver &operator%(Archiver &ar, Person &person) {
-  ar % ArchiveTagFactory::make_object_start("Person");
-  ar % ArchiveTagFactory::make_named_value_property("id", person.id);
-  ar % ArchiveTagFactory::make_named_value_property("name", person.name);
-  ar % ArchiveTagFactory::make_named_value_property("age", person.age);
-  ar % ArchiveTagFactory::make_object_end("Person");
-  return ar;
-}
-
-int main(int argc, char *argv[]) {
-
-  Core::Logging::LoggerManager::level_set(
-      Core::Logging::LoggerManager::Level::Debug);
-  Core::Logging::LoggerManager::stream_set(
-      Core::Logging::LoggerManager::stream_cout());
-
-  {
-    auto output = SQLiteOutputArchiver("database.db");
-    auto person = Person();
-    person.name = "Arthur";
-    person.age = 36;
-    output % person;
-  }
-
-  {
-    auto input = SQLiteInputArchiver("database.db");
-    auto person = Person();
-    input % person;
-    Core::Logging::LoggerManager::info("{} {} {}", person.id,
-                                       person.name.c_str(), person.age);
-  }
-
-  return 0;
-}
-```
-
-It will fetch the last record from a model in a database and fill the model. You can compile this example by issuing:
+Compile it:
 
 ```bash
-g++ -std=c++23 -Isrc examples/person-direct-mapping.cpp -o cxorm_person_example -lsqlite3
+g++ -std=c++23 -Iinclude -pthread examples/fake_pipeline.cpp -o fake_pipeline
 ```
 
-It will print the following information
+Running it produces:
 
 ```
-2025-12-11 11:33:18.167560400: INFO: INSERT INTO Person VALUES ( 0,'Arthur',37);
-2025-12-11 11:33:18.174817223: INFO: SELECT * FROM Person LIMIT 1;
-2025-12-11 11:33:18.175013242: INFO: 0 Arthur de Araújo Farias 35
+EOS received
+buffers received: 10
 ```
 
-It is shown that after inserting a value
+# Core Concepts
+
+An **element** is the unit of work in a pipeline — a source, filter, or sink.
+It owns its pads, has a current `state`, and can post to a `bus`. A **pad** is
+a typed connection point (`direction::src` or `direction::sink`); linking only
+succeeds `src → sink`, with neither side already linked and compatible caps.
+
+States are ordered `null < ready < paused < playing`. A **bin** is a composite
+element that propagates state changes to its children in data-flow order —
+sink-first going up, source-first going down — computed by a topological sort
+over the pads' link graph. A **pipeline** is a `bin` that owns the top-level
+bus.
+
+# Elements
+
+Three elements ship today, registered by name with `element_factory`:
+
+- **fake_src** — one `src` pad and a dedicated task that pushes buffers on its
+  own thread while playing (configurable count/interval).
+- **identity** — a straight passthrough, one `sink` pad, one `src` pad.
+- **fake_sink** — one `sink` pad; counts buffers received and turns an
+  incoming EOS event into an EOS message.
+
+# Bus & Messaging
+
+CXFlow splits control flow into two channels, mirroring GStreamer's
+event/message split: **events** travel pad-to-pad in-band (`pad::send_event`
+— EOS, flush start/stop); **messages** are posted to a pipeline's bus
+(`element::post_message`) and drained asynchronously by the application's own
+loop (`bus::pop`).
+
+# Documentation
+
+The full documentation site lives under [`docs.src/`](docs.src) (Hugo
+source) and builds to [`docs/`](docs). To preview it locally:
+
+```bash
+cd docs.src && hugo server
+```
 
 # Contributing
 
-We welcome issues and pull requests. Suggestions for optimizations, new drivers, or feature ideas are especially appreciated!
+We welcome issues and pull requests. Suggestions for optimizations, new
+elements, or feature ideas are especially appreciated!
 
 # License
 
-This project is licensed under propertary license – see the [file](license.md) for details.
+This project is licensed under a proprietary license — see the
+[license file](license.md) for details.
