@@ -11,6 +11,7 @@
 #include <functional>
 #include <string>
 
+#include <cxflow/containers/object.hpp>
 #include <cxflow/core/buffer.hpp>
 #include <cxflow/core/caps.hpp>
 #include <cxflow/core/event.hpp>
@@ -26,7 +27,28 @@ class element;
 // by unlink() - a deliberate simplification vs. GStreamer's independently
 // refcounted pads, acceptable since dynamic pad removal / ghost pads are
 // out of scope for this pass.
-class pad {
+//
+// SRS-001 §5.5: inherits containers::object for its scalar observable
+// properties ("active" today, any future scalar pad property tomorrow) -
+// set_active()/is_active() are thin wrappers over the inherited
+// property_set()/property_get(), so a pad's activation state is now
+// necessarily notified via property_changed. caps_ deliberately stays a
+// plain typed `caps` member rather than becoming a variant-valued property
+// (OPEN-1, resolved: caps is itself a containers::object subclass with its
+// own independent property storage/observability, §5.4 - shoving a caps
+// value into pad's own scalar property map would need variant to grow a
+// non-scalar caps alternative, which REQ-5.1.1 rejects). flushing_ stays a
+// plain, un-notified internal field per the baseline table (§4) - nothing
+// outside receive_event()/receive() observes it.
+//
+// active_ additionally stays a plain mirrored bool, read-only outside
+// set_active(): NFR-5 requires push()/receive() - the per-buffer hot path -
+// byte-for-byte unmodified, which rules out receive() taking object's mutex
+// and doing a map lookup (is_active()'s cost) on every single buffer.
+// set_active() keeps both in lockstep; is_active() reads the property (the
+// canonical, observable value), receive() reads the plain field (the
+// zero-overhead one).
+class pad : public containers::object {
 public:
   enum class direction { src, sink };
 
@@ -34,7 +56,9 @@ public:
   using event_function = std::function<bool(pad &, const event &)>;
 
   pad(std::string name, direction dir, element &owner)
-      : name_(std::move(name)), direction_(dir), owner_(owner), caps_(caps::any()) {}
+      : name_(std::move(name)), direction_(dir), owner_(owner), caps_(caps::any()) {
+    property_set("active", false);
+  }
 
   pad(const pad &) = delete;
   pad &operator=(const pad &) = delete;
@@ -60,9 +84,15 @@ public:
   bool is_linked() const { return peer_ != nullptr; }
 
   // Driven by the owning element's on_change_state, at the ready<->paused
-  // boundary.
-  void set_active(bool is_active) { active_ = is_active; }
-  bool is_active() const { return active_; }
+  // boundary. Backed by the inherited object's property storage (§5.5), so
+  // every activation change is necessarily notified via property_changed -
+  // see active_'s own comment for why receive() still reads a plain field
+  // instead of going through is_active() itself.
+  void set_active(bool is_active) {
+    property_set("active", is_active);
+    active_ = is_active;
+  }
+  bool is_active() const { return property_get<bool>("active").value_or(false); }
 
   // Pushes to this pad's peer (conceptually: called on a src pad to send
   // data downstream). Returns not_linked with no peer.
@@ -91,7 +121,7 @@ private:
   caps caps_;
 
   pad *peer_ = nullptr;
-  bool active_ = false;
+  bool active_ = false; // hot-path mirror of the "active" property - see class comment
   bool flushing_ = false;
 };
 

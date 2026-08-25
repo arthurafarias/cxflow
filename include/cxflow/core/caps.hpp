@@ -10,6 +10,7 @@
 
 #include <vector>
 
+#include <cxflow/containers/object.hpp>
 #include <cxflow/core/structure.hpp>
 
 namespace cxflow {
@@ -19,7 +20,15 @@ namespace cxflow {
 // state from "zero structures" (which matches nothing): it is deliberately
 // not representable as an empty structure list, since identity's pads need
 // to mean "accepts anything" for milestone 4 to link at all.
-class caps {
+//
+// SRS-001 §5.4/§7.3: inherits containers::object (unused by is_any_/
+// structures_ themselves, which stay plain members - is_compatible_with/
+// intersect are structural value comparisons, not live subscriptions,
+// REQ-5.4.2) purely so caps gains the same "walkable as a variant tree"
+// shape every other observable control-plane type in this SRS has, for a
+// future generic serialization walk (§7.3) to treat uniformly rather than
+// needing a caps-specific case.
+class caps : public containers::object {
 public:
   caps() = default;
 

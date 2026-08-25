@@ -13,6 +13,7 @@
 #include <cxflow/core/pad.hpp>
 
 #include <cstddef>
+#include <string>
 #include <vector>
 
 namespace cxflow::testing {
@@ -142,6 +143,18 @@ struct pad_test : public test_group {
       element o("o");
       pad p("p", pad::direction::src, o);
       ctx.check(!p.send_event(event{event_type::eos}), "send_event() with no peer should return false");
+    }},
+    {"set_active() fires property_changed (SRS-001 §5.5)", [](test_context &ctx) {
+      element o("o");
+      pad p("p", pad::direction::sink, o);
+      ctx.check(!p.is_active(), "a pad should start inactive");
+
+      std::vector<std::string> changed;
+      p.property_changed.connect([&](const std::string &name) { changed.push_back(name); });
+
+      p.set_active(true);
+      ctx.check(p.is_active(), "is_active() should reflect the value passed to set_active()");
+      ctx.check(changed == std::vector<std::string>{"active"}, "set_active() should notify property_changed naming \"active\"");
     }},
   }) {}
 };

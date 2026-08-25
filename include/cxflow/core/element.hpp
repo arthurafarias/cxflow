@@ -8,11 +8,13 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
 
+#include <cxflow/containers/object.hpp>
 #include <cxflow/core/bus.hpp>
 #include <cxflow/core/pad.hpp>
 #include <cxflow/core/state.hpp>
@@ -23,7 +25,19 @@ namespace cxflow {
 // Owned via shared_ptr (required by element_factory::create, bin's children
 // list, and message::source as a weak_ptr). Pads are owned by their
 // element (vector<unique_ptr<pad>>), handed out as non-owning pad*/pad&.
-class element : public std::enable_shared_from_this<element> {
+//
+// SRS-001 §5.6: inherits containers::object directly - custom element
+// properties (fake_src's "num-buffers"/"interval-ms", any future element's
+// tunables) go through the inherited property_set()/property_get(), so the
+// factory/application layer can tune an element generically
+// (element->property_set("num-buffers", std::int64_t{10})) without
+// downcasting to the concrete element type or #include-ing its header
+// (REQ-5.6.2). state_ deliberately stays outside that property map (§5.6.1,
+// following OPEN-1's resolution): it is a plain enum with no variant
+// alternative to hold it, notified through its own independent
+// state_changed signal rather than being shoehorned into a variant-valued
+// property entry.
+class element : public std::enable_shared_from_this<element>, public containers::object {
 public:
   explicit element(std::string name) : name_(std::move(name)) {}
   virtual ~element() = default;
@@ -49,6 +63,15 @@ public:
 
   threading::signal<element &, state, state> state_changed; // (self, old, new)
   threading::signal<element &, pad &> pad_added;
+
+  // Sugar over state_changed for the common case of "I don't need `self`,
+  // just old/new" (SRS-001 §5.8's `pipe.on_state_changed([](state, state)
+  // {...})` example) - a thin connect() wrapper, not a second notification
+  // path.
+  using state_changed_connection = threading::signal<element &, state, state>::connection;
+  state_changed_connection on_state_changed(std::function<void(state, state)> fn) {
+    return state_changed.connect([fn = std::move(fn)](element &, state old_state, state new_state) { fn(old_state, new_state); });
+  }
 
   // Set by bin::add() when this element becomes (transitively) a pipeline's
   // child, mirroring how gst_element_post_message() walks up to the

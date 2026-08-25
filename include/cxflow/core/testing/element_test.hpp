@@ -13,6 +13,7 @@
 
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -62,6 +63,21 @@ struct element_test : public test_group {
 
       e.set_state(state::null);
       ctx.check(!p.is_active(), "a pad should not be active once back to null");
+    }},
+    {"element exposes generic property_set()/property_get() (SRS-001 §5.6)", [](test_context &ctx) {
+      element e("e");
+      ctx.check(!e.has("num-buffers"), "an unset custom property should be absent");
+      e.property_set("num-buffers", std::int64_t{10});
+      ctx.check(e.property_get<std::int64_t>("num-buffers").value_or(0) == 10, "property_get() should return the value passed to property_set()");
+    }},
+    {"on_state_changed() is sugar over state_changed with no self argument", [](test_context &ctx) {
+      element e("e");
+      std::vector<std::pair<state, state>> transitions;
+      e.on_state_changed([&](state from, state to) { transitions.emplace_back(from, to); });
+
+      ctx.check(e.set_state(state::ready) == state_change_return::success, "reaching ready should succeed");
+      ctx.check_equal(transitions.size(), std::size_t{1});
+      ctx.check(transitions[0] == std::pair(state::null, state::ready), "on_state_changed() should observe the same transition as state_changed");
     }},
     {"post_message() is a no-op without a bus and forwards once one is set", [](test_context &ctx) {
       element e("e");

@@ -26,6 +26,15 @@ namespace cxflow {
 // (a source's push thread must stop before the sink it feeds is torn down).
 // No ghost pads / external pads yet (deferred) - a bin has no pads of its
 // own in this pass.
+//
+// SRS-001 §7.3: already inherits containers::object transitively through
+// `element` (§5.6) - no separate/second inheritance is added here (that
+// would create an ambiguous duplicate base). This already gives a bin its
+// own observable property bag for free, the same way it already
+// unconditionally carries pads_/state_/bus_ (OPEN-2); a future generic
+// serialization walk (§7.3) that needs to also capture a bin's child/
+// topology state (children_, walked via children()) is follow-on work, not
+// part of this pass.
 class bin : public element {
 public:
   explicit bin(std::string name) : element(std::move(name)) {}

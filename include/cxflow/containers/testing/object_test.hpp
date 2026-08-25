@@ -55,6 +55,16 @@ struct object_test : public test_group {
       obj.property_set("rate", std::uint64_t{44100});
       ctx.check(visible_inside_slot, "a property_changed slot should already see the new value (lock released before emit)");
     }},
+    {"property_get_variant() returns the stored value without committing to an alternative", [](test_context &ctx) {
+      containers::object obj;
+      ctx.check(!obj.property_get_variant("rate").has_value(), "an absent key should return nullopt");
+
+      obj.property_set("rate", std::uint64_t{44100});
+      auto v = obj.property_get_variant("rate");
+      ctx.require(v.has_value(), "property_get_variant() should find a present key");
+      ctx.check(std::holds_alternative<std::uint64_t>(*v), "the returned variant should hold whatever alternative was set");
+      ctx.check(std::get<std::uint64_t>(*v) == 44100, "the returned variant should carry the value passed to property_set()");
+    }},
     {"a copy has its own independent storage", [](test_context &ctx) {
       containers::object original;
       original.property_set("rate", std::uint64_t{44100});

@@ -32,6 +32,15 @@ struct variant_test : public test_group {
       ctx.check(!std::holds_alternative<std::double_t>(v), "should not hold double_t");
       ctx.check(std::get<std::uint64_t>(v) == 42, "std::get<uint64_t>() should return the stored value");
     }},
+    {"int64_t and uint64_t are distinct alternatives (OPEN-6)", [](test_context &ctx) {
+      containers::variant negative = std::int64_t{-1};
+      ctx.check(std::holds_alternative<std::int64_t>(negative), "an int64_t argument should select the int64_t alternative");
+      ctx.check(std::get<std::int64_t>(negative) == -1, "a negative value should round-trip exactly, not wrap");
+
+      containers::variant unsigned_value = std::uint64_t{42};
+      ctx.check(std::holds_alternative<std::uint64_t>(unsigned_value), "a uint64_t argument should select the uint64_t alternative");
+      ctx.check(!std::holds_alternative<std::int64_t>(unsigned_value), "a uint64_t-held variant should not also report int64_t");
+    }},
     {"a string literal is stored as std::string, not bool", [](test_context &ctx) {
       containers::variant v = "hello";
       ctx.check(std::holds_alternative<std::string>(v), "string literal should select the std::string alternative, not bool (P0608)");

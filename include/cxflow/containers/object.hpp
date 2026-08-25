@@ -107,12 +107,23 @@ public:
   // same as a bare std::get<ValueType>) when name is present but holds a
   // different alternative.
   template <typename ValueType> std::optional<ValueType> property_get(const std::string &name) const {
-    std::unique_lock lock(mutex_);
-    auto value = container_.get(name);
+    auto value = property_get_variant(name);
     if (!value) {
       return std::nullopt;
     }
     return std::get<ValueType>(*value);
+  }
+
+  // Same absent-key contract as property_get(), but returns the stored
+  // variant itself rather than unwrapping one specific alternative via
+  // std::get<ValueType> - the accessor a caller reaches for when it wants
+  // "whatever this property currently holds" without committing to an
+  // alternative ahead of time (e.g. structure::get(), §5.4, whose field
+  // values were never scalar-typed to begin with - the original
+  // structure::field_value was itself a small variant).
+  std::optional<variant> property_get_variant(const std::string &name) const {
+    std::unique_lock lock(mutex_);
+    return container_.get(name);
   }
 
   // A thread-safe forward iterator: begin() takes the lock exactly once,

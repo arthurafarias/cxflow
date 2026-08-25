@@ -24,11 +24,26 @@ namespace cxflow::containers {
 // the base's scalar alternatives if/when a new field type is actually
 // needed, rather than adding an open-ended fallback now.
 //
-// Closed set is bool/uint64_t/double_t/string plus the two self-referential
-// aggregate alternatives below. Any argument not implicitly,
-// non-narrowingly convertible to one of the six alternatives simply fails
-// to compile at the call site, same as passing an unrelated type to a bare
-// std::variant of these alternatives would.
+// Closed set is bool/int64_t/uint64_t/double_t/string plus the two
+// self-referential aggregate alternatives below. Any argument not
+// implicitly, non-narrowingly convertible to one of the seven alternatives
+// simply fails to compile at the call site, same as passing an unrelated
+// type to a bare std::variant of these alternatives would.
+//
+// int64_t was added alongside uint64_t (SRS-001 OPEN-6, resolved: widen
+// rather than scope negative values out) so that structure::field_value's
+// signed 64-bit integer alternative has a lossless home here - a
+// structure/caps field holding a negative value, or an element property
+// that needs a signed sentinel (e.g. fake_src's num-buffers, where -1 means
+// "unbounded"), now round-trips exactly instead of wrapping into a huge
+// unsigned value or being rejected outright. Callers must still pass an
+// exact-width, exact-signedness integer literal (std::int64_t{...} /
+// std::uint64_t{...}), never a bare int/long: with two integral
+// alternatives of equal conversion rank now present, an implicitly-widened
+// argument is ambiguous between them (the same reason a bare string
+// literal already had to be reasoned about via P0608 below) - this was
+// already the project's convention before this alternative was added, not
+// a new restriction it introduces.
 //
 // Publicly inherits std::variant instead of wrapping it, so the whole
 // standard variant interface applies directly to this type: std::get,
@@ -57,11 +72,11 @@ namespace cxflow::containers {
 // Verified to compile on GCC 16 and Clang 22 in C++23.
 struct variant;
 struct variant
-    : public std::variant<bool, std::uint64_t, std::double_t, std::string,
+    : public std::variant<bool, std::int64_t, std::uint64_t, std::double_t, std::string,
                           std::deque<variant>, std::map<std::string, variant>> {
 public:
   using base =
-      std::variant<bool, std::uint64_t, std::double_t, std::string,
+      std::variant<bool, std::int64_t, std::uint64_t, std::double_t, std::string,
                    std::deque<variant>, std::map<std::string, variant>>;
   using base::variant;
 };

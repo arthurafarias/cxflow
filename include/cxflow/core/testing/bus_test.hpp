@@ -58,6 +58,11 @@ struct bus_test : public test_group {
       ctx.check_equal(count, 1);
       ctx.check(seen_type == message_type::error, "message_posted should carry the posted message's type");
     }},
+    {"bus inherits object's property storage (SRS-001 §7.3)", [](test_context &ctx) {
+      bus b;
+      b.property_set("name", std::string{"main-bus"});
+      ctx.check(b.property_get<std::string>("name").value_or("") == "main-bus", "bus should expose property_set()/property_get() via its containers::object base");
+    }},
   }) {}
 };
 

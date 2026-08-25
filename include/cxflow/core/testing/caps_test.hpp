@@ -75,8 +75,13 @@ struct caps_test : public test_group {
 
       caps result = a.intersect(b);
       ctx.require(result.structures().size() == 1, "one compatible structure pair should produce one result structure");
-      ctx.check(result.structures()[0].get("channels") != nullptr, "result should carry lhs's own fields");
-      ctx.check(result.structures()[0].get("format") == nullptr, "result should not pick up rhs's fields");
+      ctx.check(result.structures()[0].get("channels").has_value(), "result should carry lhs's own fields");
+      ctx.check(!result.structures()[0].get("format").has_value(), "result should not pick up rhs's fields");
+    }},
+    {"caps inherits object's property storage", [](test_context &ctx) {
+      caps c;
+      c.property_set("mime-type", std::string{"audio/x-raw"});
+      ctx.check(c.property_get<std::string>("mime-type").value_or("") == "audio/x-raw", "caps should expose property_set()/property_get() via its containers::object base");
     }},
   }) {}
 };
