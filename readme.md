@@ -46,8 +46,8 @@ runs it to end-of-stream, and reports how many buffers the sink saw:
 #include <cxflow/elements/fake_src.hpp>
 #include <cxflow/elements/identity.hpp>
 
-using namespace media::streamer;
-using namespace media::streamer::elements;
+using namespace cxflow;
+using namespace cxflow::elements;
 
 int main() {
   fake_src::register_type();

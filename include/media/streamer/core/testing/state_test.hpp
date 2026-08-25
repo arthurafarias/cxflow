@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include <media/streamer/testing/test_group.hpp>
-#include <media/streamer/core/state.hpp>
+#include <cxflow/testing/test_group.hpp>
+#include <cxflow/core/state.hpp>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 struct state_test : public test_group {
   state_test() : test_group("state", {
@@ -28,4 +28,4 @@ struct state_test : public test_group {
 
 inline static state_test state_test_instance;
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

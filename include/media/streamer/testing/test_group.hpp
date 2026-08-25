@@ -15,7 +15,7 @@
 #include "registry.hpp"
 #include "test_case.hpp"
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 // One test_group per module, declared as an `inline static` in that
 // module's tests/**/*_test.cpp. Construction self-registers the group into
@@ -36,4 +36,4 @@ private:
   std::vector<test_case> cases_;
 };
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

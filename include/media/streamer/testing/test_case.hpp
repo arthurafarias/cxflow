@@ -14,7 +14,7 @@
 
 #include "test_context.hpp"
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 class test_case {
 public:
@@ -52,4 +52,4 @@ private:
   bool expect_crash_ = false;
 };
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

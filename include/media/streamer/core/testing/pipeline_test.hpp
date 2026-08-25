@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include <media/streamer/testing/test_group.hpp>
-#include <media/streamer/core/pipeline.hpp>
+#include <cxflow/testing/test_group.hpp>
+#include <cxflow/core/pipeline.hpp>
 
 #include <chrono>
 #include <memory>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 struct pipeline_test : public test_group {
   pipeline_test() : test_group("pipeline", {
@@ -44,4 +44,4 @@ struct pipeline_test : public test_group {
 
 inline static pipeline_test pipeline_test_instance;
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

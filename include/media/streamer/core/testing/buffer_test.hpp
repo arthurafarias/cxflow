@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <media/streamer/testing/test_group.hpp>
-#include <media/streamer/core/buffer.hpp>
+#include <cxflow/testing/test_group.hpp>
+#include <cxflow/core/buffer.hpp>
 
 #include <chrono>
 #include <cstddef>
 #include <vector>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 struct buffer_test : public test_group {
   buffer_test() : test_group("buffer", {
@@ -58,4 +58,4 @@ struct buffer_test : public test_group {
 
 inline static buffer_test buffer_test_instance;
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

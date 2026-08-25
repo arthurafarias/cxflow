@@ -75,7 +75,7 @@ add_subdirectory(examples)
 # media-streamer stays dependency-free beyond the STL. Since the library
 # itself is header-only, its tests are colocated header-only too - each
 # include/.../testing/*_test.hpp declares a self-registering `test_group`
-# (see include/media/streamer/testing/test_group.hpp). A test header can't be
+# (see include/cxflow/testing/test_group.hpp). A test header can't be
 # its own translation unit, so every one found is glob'd into a single
 # generated .cpp of #includes and compiled into one test binary, the same way
 # opheap's tests/CMakeLists.txt does it. CONFIGURE_DEPENDS means adding a new

@@ -14,17 +14,17 @@
 #include <chrono>
 #include <iostream>
 
-#include <media/streamer/core/element_factory.hpp>
-#include <media/streamer/core/message.hpp>
-#include <media/streamer/core/pad.hpp>
-#include <media/streamer/core/pipeline.hpp>
-#include <media/streamer/core/state.hpp>
-#include <media/streamer/elements/fake_sink.hpp>
-#include <media/streamer/elements/fake_src.hpp>
-#include <media/streamer/elements/identity.hpp>
+#include <cxflow/core/element_factory.hpp>
+#include <cxflow/core/message.hpp>
+#include <cxflow/core/pad.hpp>
+#include <cxflow/core/pipeline.hpp>
+#include <cxflow/core/state.hpp>
+#include <cxflow/elements/fake_sink.hpp>
+#include <cxflow/elements/fake_src.hpp>
+#include <cxflow/elements/identity.hpp>
 
-using namespace media::streamer;
-using namespace media::streamer::elements;
+using namespace cxflow;
+using namespace cxflow::elements;
 
 int main() {
   fake_src::register_type();

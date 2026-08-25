@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 // Passed into every test case body. Failures are recorded rather than
 // thrown, so a case keeps running after a failed check (like GTest's
@@ -88,4 +88,4 @@ private:
   std::vector<std::string> failures_;
 };
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <media/streamer/testing/test_group.hpp>
-#include <media/streamer/elements/identity.hpp>
+#include <cxflow/testing/test_group.hpp>
+#include <cxflow/elements/identity.hpp>
 
 #include <cstdint>
 #include <memory>
 #include <vector>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 struct identity_test : public test_group {
   identity_test() : test_group("identity", {
@@ -80,4 +80,4 @@ struct identity_test : public test_group {
 
 inline static identity_test identity_test_instance;
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

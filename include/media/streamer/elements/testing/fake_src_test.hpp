@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include <media/streamer/testing/test_group.hpp>
-#include <media/streamer/elements/fake_src.hpp>
+#include <cxflow/testing/test_group.hpp>
+#include <cxflow/elements/fake_src.hpp>
 
 #include <chrono>
 #include <cstddef>
@@ -17,7 +17,7 @@
 #include <thread>
 #include <vector>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 struct fake_src_test : public test_group {
   fake_src_test() : test_group("fake_src", {
@@ -76,4 +76,4 @@ struct fake_src_test : public test_group {
 
 inline static fake_src_test fake_src_test_instance;
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

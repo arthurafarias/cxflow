@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <media/streamer/testing/test_group.hpp>
-#include <media/streamer/core/caps.hpp>
+#include <cxflow/testing/test_group.hpp>
+#include <cxflow/core/caps.hpp>
 
 #include <cstddef>
 #include <cstdint>
 #include <string>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 struct caps_test : public test_group {
   caps_test() : test_group("caps", {
@@ -83,4 +83,4 @@ struct caps_test : public test_group {
 
 inline static caps_test caps_test_instance;
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

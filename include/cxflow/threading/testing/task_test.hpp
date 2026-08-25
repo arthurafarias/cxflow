@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <media/streamer/testing/test_group.hpp>
-#include <media/streamer/threading/task.hpp>
+#include <cxflow/testing/test_group.hpp>
+#include <cxflow/threading/task.hpp>
 
 #include <atomic>
 #include <chrono>
 #include <thread>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 struct task_test : public test_group {
   task_test() : test_group("task", {
@@ -80,4 +80,4 @@ struct task_test : public test_group {
 
 inline static task_test task_test_instance;
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

@@ -15,10 +15,10 @@
 #include <unistd.h>
 #include <vector>
 
-#include <media/streamer/testing/registry.hpp>
-#include <media/streamer/testing/test_group.hpp>
+#include <cxflow/testing/registry.hpp>
+#include <cxflow/testing/test_group.hpp>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 namespace detail {
 
@@ -112,4 +112,4 @@ inline int run_all(int argc, char **argv) {
   return passed == total ? 0 : 1;
 }
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

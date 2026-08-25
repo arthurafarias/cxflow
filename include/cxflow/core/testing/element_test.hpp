@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include <media/streamer/testing/test_group.hpp>
-#include <media/streamer/core/element.hpp>
+#include <cxflow/testing/test_group.hpp>
+#include <cxflow/core/element.hpp>
 
 #include <chrono>
 #include <cstddef>
@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 struct element_test : public test_group {
   element_test() : test_group("element", {
@@ -86,4 +86,4 @@ struct element_test : public test_group {
 
 inline static element_test element_test_instance;
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

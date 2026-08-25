@@ -6,6 +6,6 @@
 // permission of the copyright holder.
 // ---------------------------------------------------------------------------
 
-#include <media/streamer/testing/run_all.hpp>
+#include <cxflow/testing/run_all.hpp>
 
-int main(int argc, char **argv) { return media::streamer::testing::run_all(argc, argv); }
+int main(int argc, char **argv) { return cxflow::testing::run_all(argc, argv); }

@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include <media/streamer/testing/test_group.hpp>
-#include <media/streamer/core/bin.hpp>
+#include <cxflow/testing/test_group.hpp>
+#include <cxflow/core/bin.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 namespace bin_test_detail {
 
@@ -104,4 +104,4 @@ struct bin_test : public test_group {
 
 inline static bin_test bin_test_instance;
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

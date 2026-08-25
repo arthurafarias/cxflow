@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <media/streamer/testing/test_group.hpp>
-#include <media/streamer/core/element.hpp>
-#include <media/streamer/core/pad.hpp>
+#include <cxflow/testing/test_group.hpp>
+#include <cxflow/core/element.hpp>
+#include <cxflow/core/pad.hpp>
 
 #include <cstddef>
 #include <vector>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 struct pad_test : public test_group {
   pad_test() : test_group("pad", {
@@ -148,4 +148,4 @@ struct pad_test : public test_group {
 
 inline static pad_test pad_test_instance;
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

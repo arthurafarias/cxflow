@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <media/streamer/testing/test_group.hpp>
-#include <media/streamer/core/element_factory.hpp>
+#include <cxflow/testing/test_group.hpp>
+#include <cxflow/core/element_factory.hpp>
 
 #include <memory>
 #include <string>
 #include <utility>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 struct element_factory_test : public test_group {
   element_factory_test() : test_group("element_factory", {
@@ -39,4 +39,4 @@ struct element_factory_test : public test_group {
 
 inline static element_factory_test element_factory_test_instance;
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

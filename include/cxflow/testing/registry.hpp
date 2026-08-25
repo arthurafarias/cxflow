@@ -10,7 +10,7 @@
 
 #include <vector>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 class test_group;
 
@@ -32,4 +32,4 @@ private:
   std::vector<test_group *> groups_;
 };
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

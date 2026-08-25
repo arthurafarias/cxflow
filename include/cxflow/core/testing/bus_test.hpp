@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include <media/streamer/testing/test_group.hpp>
-#include <media/streamer/core/bus.hpp>
+#include <cxflow/testing/test_group.hpp>
+#include <cxflow/core/bus.hpp>
 
 #include <chrono>
 #include <string>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 struct bus_test : public test_group {
   bus_test() : test_group("bus", {
@@ -63,4 +63,4 @@ struct bus_test : public test_group {
 
 inline static bus_test bus_test_instance;
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

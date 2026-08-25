@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <media/streamer/testing/test_group.hpp>
-#include <media/streamer/elements/fake_sink.hpp>
+#include <cxflow/testing/test_group.hpp>
+#include <cxflow/elements/fake_sink.hpp>
 
 #include <chrono>
 #include <cstdint>
 #include <memory>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 struct fake_sink_test : public test_group {
   fake_sink_test() : test_group("fake_sink", {
@@ -64,4 +64,4 @@ struct fake_sink_test : public test_group {
 
 inline static fake_sink_test fake_sink_test_instance;
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing

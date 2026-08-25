@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include <media/streamer/testing/test_group.hpp>
-#include <media/streamer/core/structure.hpp>
+#include <cxflow/testing/test_group.hpp>
+#include <cxflow/core/structure.hpp>
 
 #include <cstdint>
 
-namespace media::streamer::testing {
+namespace cxflow::testing {
 
 struct structure_test : public test_group {
   structure_test() : test_group("structure", {
@@ -54,4 +54,4 @@ struct structure_test : public test_group {
 
 inline static structure_test structure_test_instance;
 
-} // namespace media::streamer::testing
+} // namespace cxflow::testing
