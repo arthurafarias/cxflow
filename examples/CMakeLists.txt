@@ -7,4 +7,6 @@
 ## ---------------------------------------------------------------------------
 
 add_executable(fake_pipeline fake_pipeline.cpp)
-target_link_libraries(fake_pipeline PRIVATE media-streamer)
+
+target_link_libraries(fake_pipeline PRIVATE cxflow)
+# target_link_libraries(app_pipeline PRIVATE cxflow)

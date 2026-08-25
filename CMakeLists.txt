@@ -7,7 +7,7 @@
 ## ---------------------------------------------------------------------------
 
 cmake_minimum_required(VERSION 3.16)
-project(media-streamer VERSION 0.1.0)
+project(cxflow VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
@@ -17,7 +17,7 @@ find_package(Threads REQUIRED)
 
 include(CMakePackageConfigHelpers)
 
-# Header-only: media-streamer produces no library binary of its own. Only the
+# Header-only: cxflow produces no library binary of its own. Only the
 # examples (and the self-hosted test binary below) compile to real object
 # files/executables.
 add_library(${PROJECT_NAME} INTERFACE)
@@ -72,7 +72,7 @@ install(FILES
 add_subdirectory(examples)
 
 # Self-hosted test facility: no external test framework (gtest/catch2/etc),
-# media-streamer stays dependency-free beyond the STL. Since the library
+# cxflow stays dependency-free beyond the STL. Since the library
 # itself is header-only, its tests are colocated header-only too - each
 # include/.../testing/*_test.hpp declares a self-registering `test_group`
 # (see include/cxflow/testing/test_group.hpp). A test header can't be
@@ -80,7 +80,7 @@ add_subdirectory(examples)
 # generated .cpp of #includes and compiled into one test binary, the same way
 # opheap's tests/CMakeLists.txt does it. CONFIGURE_DEPENDS means adding a new
 # testing/*_test.hpp triggers CMake to pick it up on the next build.
-option(MEDIA_STREAMER_BUILD_TESTS "Build media-streamer's self-hosted test facility" ON)
+option(MEDIA_STREAMER_BUILD_TESTS "Build cxflow's self-hosted test facility" ON)
 if(MEDIA_STREAMER_BUILD_TESTS)
   set(MEDIA_STREAMER_GENERATED_TESTS "${CMAKE_CURRENT_BINARY_DIR}/all_tests.cpp")
   file(WRITE "${MEDIA_STREAMER_GENERATED_TESTS}"
@@ -101,4 +101,47 @@ if(MEDIA_STREAMER_BUILD_TESTS)
 
   enable_testing()
   add_test(NAME ${PROJECT_NAME}-tests COMMAND ${PROJECT_NAME}-tests)
+
+  # Coverage: instruments cxflow-tests with gcov's --coverage flags
+  # (GCC/Clang only) and adds a `coverage` target that runs the test binary
+  # and turns the resulting .gcda data into an HTML report via gcovr - no
+  # lcov/genhtml dependency, gcovr is a single pure-Python tool. OFF by
+  # default since it forces -O0 and adds instrumentation overhead; not
+  # something a normal build/test iteration needs.
+  option(MEDIA_STREAMER_ENABLE_COVERAGE "Instrument cxflow-tests for gcov/gcovr coverage reporting" OFF)
+  if(MEDIA_STREAMER_ENABLE_COVERAGE)
+    if(NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+      message(FATAL_ERROR "MEDIA_STREAMER_ENABLE_COVERAGE requires GCC or Clang (--coverage), not ${CMAKE_CXX_COMPILER_ID}")
+    endif()
+
+    target_compile_options(${PROJECT_NAME}-tests PRIVATE --coverage -O0 -g)
+    target_link_options(${PROJECT_NAME}-tests PRIVATE --coverage)
+
+    find_program(MEDIA_STREAMER_GCOVR_EXECUTABLE gcovr)
+    if(MEDIA_STREAMER_GCOVR_EXECUTABLE)
+      # Published alongside the built docs site (docs/, see docs.src's
+      # publishDir) as a sibling directory Hugo doesn't generate or clean -
+      # a plain static HTML report, not Hugo content.
+      set(MEDIA_STREAMER_COVERAGE_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/docs/coverage")
+      add_custom_target(coverage
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${MEDIA_STREAMER_COVERAGE_OUTPUT_DIR}"
+        COMMAND $<TARGET_FILE:${PROJECT_NAME}-tests>
+        COMMAND ${MEDIA_STREAMER_GCOVR_EXECUTABLE}
+                --root "${CMAKE_CURRENT_SOURCE_DIR}"
+                --filter "${CMAKE_CURRENT_SOURCE_DIR}/include/cxflow/.*"
+                --exclude ".*/testing/.*"
+                --html --html-details
+                --html-title "CXFlow Coverage"
+                --sort uncovered-percent --sort-reverse
+                -o "${MEDIA_STREAMER_COVERAGE_OUTPUT_DIR}/index.html"
+                "${CMAKE_CURRENT_BINARY_DIR}"
+        DEPENDS ${PROJECT_NAME}-tests
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Running ${PROJECT_NAME}-tests under coverage instrumentation and generating an HTML report in docs/coverage"
+        VERBATIM
+      )
+    else()
+      message(WARNING "MEDIA_STREAMER_ENABLE_COVERAGE is ON but gcovr was not found - the 'coverage' target will not be available. Install gcovr (e.g. `pip install gcovr`) to enable it.")
+    endif()
+  endif()
 endif()
