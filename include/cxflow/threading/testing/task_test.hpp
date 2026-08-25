@@ -26,9 +26,9 @@ struct task_test : public test_group {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
       });
 
-      ctx.check(!t.is_running());
+      ctx.check(!t.is_running(), "a task should not be running before start()");
       t.start();
-      ctx.check(t.is_running());
+      ctx.check(t.is_running(), "a task should be running after start()");
 
       for (int i = 0; i < 200 && count.load() < 3; ++i) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -36,7 +36,7 @@ struct task_test : public test_group {
       ctx.check(count.load() >= 3, "the loop should have run several times while started");
 
       t.stop();
-      ctx.check(!t.is_running());
+      ctx.check(!t.is_running(), "a task should not be running after stop()");
 
       int after_stop = count.load();
       std::this_thread::sleep_for(std::chrono::milliseconds(20));

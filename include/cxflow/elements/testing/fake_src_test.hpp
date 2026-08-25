@@ -25,7 +25,7 @@ struct fake_src_test : public test_group {
       elements::fake_src::register_type();
       auto instance = element_factory::create("fake_src", "src-instance");
       ctx.require(instance != nullptr, "element_factory should produce a fake_src instance");
-      ctx.check(instance->get_static_pad("src") != nullptr);
+      ctx.check(instance->get_static_pad("src") != nullptr, "fake_src should expose a 'src' pad");
     }},
     {"playing pushes buffers with pts spaced by the interval, then sends EOS at the buffer limit",
      [](test_context &ctx) {
@@ -66,10 +66,10 @@ struct fake_src_test : public test_group {
        ctx.check_equal(pts_seen.size(), std::size_t{3});
        for (std::size_t i = 0; i < pts_seen.size(); ++i) {
          ctx.require(pts_seen[i].has_value(), "each pushed buffer should carry a pts");
-         ctx.check(*pts_seen[i] == std::chrono::milliseconds(5) * static_cast<int>(i));
+         ctx.check(*pts_seen[i] == std::chrono::milliseconds(5) * static_cast<int>(i), "each buffer's pts should be spaced by the interval");
        }
 
-       ctx.check(src->set_state(state::null) == state_change_return::success);
+       ctx.check(src->set_state(state::null) == state_change_return::success, "returning to state::null should succeed");
      }},
   }) {}
 };

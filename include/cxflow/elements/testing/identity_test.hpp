@@ -23,8 +23,8 @@ struct identity_test : public test_group {
       elements::identity::register_type();
       auto instance = element_factory::create("identity", "identity-instance");
       ctx.require(instance != nullptr, "element_factory should produce an identity instance");
-      ctx.check(instance->get_static_pad("sink") != nullptr);
-      ctx.check(instance->get_static_pad("src") != nullptr);
+      ctx.check(instance->get_static_pad("sink") != nullptr, "identity should expose a 'sink' pad");
+      ctx.check(instance->get_static_pad("src") != nullptr, "identity should expose a 'src' pad");
     }},
     {"chain() re-pushes buffers downstream unchanged", [](test_context &ctx) {
       auto id = std::make_shared<elements::identity>("id");
@@ -48,7 +48,7 @@ struct identity_test : public test_group {
 
       buffer buf;
       buf.offset = 42;
-      ctx.check(up_src.push(std::move(buf)) == flow_return::ok);
+      ctx.check(up_src.push(std::move(buf)) == flow_return::ok, "pushing through identity should succeed");
       ctx.require(offsets_seen.size() == 1, "the buffer should have reached downstream");
       ctx.check_equal(offsets_seen[0], std::uint64_t{42});
     }},
@@ -72,8 +72,8 @@ struct identity_test : public test_group {
         return true;
       });
 
-      ctx.check(up_src.send_event(event{event_type::eos}));
-      ctx.check(eos_seen);
+      ctx.check(up_src.send_event(event{event_type::eos}), "send_event(eos) should succeed");
+      ctx.check(eos_seen, "identity should re-send the eos event downstream");
     }},
   }) {}
 };

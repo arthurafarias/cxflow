@@ -20,34 +20,34 @@ struct structure_test : public test_group {
     {"same name with no fields is compatible", [](test_context &ctx) {
       structure a("audio/x-raw");
       structure b("audio/x-raw");
-      ctx.check(a.is_compatible_with(b));
+      ctx.check(a.is_compatible_with(b), "same name with no fields should be compatible");
     }},
     {"different names are incompatible", [](test_context &ctx) {
       structure a("audio/x-raw");
       structure b("video/x-raw");
-      ctx.check(!a.is_compatible_with(b));
+      ctx.check(!a.is_compatible_with(b), "different names should be incompatible");
     }},
     {"matching field values are compatible", [](test_context &ctx) {
       structure a("audio/x-raw");
       structure b("audio/x-raw");
       a.set("rate", std::int64_t{44100});
       b.set("rate", std::int64_t{44100});
-      ctx.check(a.is_compatible_with(b));
+      ctx.check(a.is_compatible_with(b), "matching field values should be compatible");
     }},
     {"conflicting field values are incompatible", [](test_context &ctx) {
       structure a("audio/x-raw");
       structure b("audio/x-raw");
       a.set("rate", std::int64_t{44100});
       b.set("rate", std::int64_t{48000});
-      ctx.check(!a.is_compatible_with(b));
+      ctx.check(!a.is_compatible_with(b), "conflicting field values should be incompatible");
     }},
     {"a field present on only one side does not block the match", [](test_context &ctx) {
       structure a("audio/x-raw");
       structure b("audio/x-raw");
       a.set("rate", std::int64_t{44100});
       b.set("channels", std::int64_t{2});
-      ctx.check(a.is_compatible_with(b));
-      ctx.check(b.is_compatible_with(a));
+      ctx.check(a.is_compatible_with(b), "a field present on only one side should not block the match");
+      ctx.check(b.is_compatible_with(a), "compatibility should hold in both directions");
     }},
   }) {}
 };

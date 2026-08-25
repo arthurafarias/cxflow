@@ -19,9 +19,9 @@ struct state_test : public test_group {
       // element::set_state()'s single-step walk (see element.hpp) relies on
       // this exact ordering via static_cast<int> comparisons - reordering the
       // enum would silently break it.
-      ctx.check(static_cast<int>(state::null) < static_cast<int>(state::ready));
-      ctx.check(static_cast<int>(state::ready) < static_cast<int>(state::paused));
-      ctx.check(static_cast<int>(state::paused) < static_cast<int>(state::playing));
+      ctx.check(static_cast<int>(state::null) < static_cast<int>(state::ready), "null should order before ready");
+      ctx.check(static_cast<int>(state::ready) < static_cast<int>(state::paused), "ready should order before paused");
+      ctx.check(static_cast<int>(state::paused) < static_cast<int>(state::playing), "paused should order before playing");
     }},
   }) {}
 };

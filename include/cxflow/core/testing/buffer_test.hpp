@@ -22,10 +22,10 @@ struct buffer_test : public test_group {
     {"a default-constructed buffer is empty and has no timing set", [](test_context &ctx) {
       buffer b;
       ctx.check_equal(b.size(), std::size_t{0});
-      ctx.check(b.data().empty());
-      ctx.check(!b.pts.has_value());
-      ctx.check(!b.dts.has_value());
-      ctx.check(!b.duration.has_value());
+      ctx.check(b.data().empty(), "a default-constructed buffer should have no data");
+      ctx.check(!b.pts.has_value(), "a default-constructed buffer should have no pts");
+      ctx.check(!b.dts.has_value(), "a default-constructed buffer should have no dts");
+      ctx.check(!b.duration.has_value(), "a default-constructed buffer should have no duration");
     }},
     {"copy() deep-copies storage and carries timing/offset", [](test_context &ctx) {
       std::vector<std::byte> data{std::byte{1}, std::byte{2}, std::byte{3}};
@@ -40,7 +40,7 @@ struct buffer_test : public test_group {
       ctx.check_equal(copy.size(), original.size());
       ctx.check(copy.data().data() != original.data().data(), "copy() must not share storage with the original");
       for (std::size_t i = 0; i < copy.size(); ++i) {
-        ctx.check(copy.data()[i] == original.data()[i]);
+        ctx.check(copy.data()[i] == original.data()[i], "copy() should preserve byte contents");
       }
       ctx.check(copy.pts == original.pts, "pts should be carried by copy()");
       ctx.check(copy.dts == original.dts, "dts should be carried by copy()");
@@ -51,7 +51,7 @@ struct buffer_test : public test_group {
       buffer b;
       buffer c = b.copy();
       ctx.check_equal(c.size(), std::size_t{0});
-      ctx.check(c.data().empty());
+      ctx.check(c.data().empty(), "copy() of an empty buffer should stay empty");
     }},
   }) {}
 };

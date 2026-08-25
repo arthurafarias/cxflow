@@ -43,15 +43,15 @@ struct bin_test : public test_group {
       b.add(child);
 
       ctx.check_equal(b.children().size(), std::size_t{1});
-      ctx.check(b.children()[0] == child);
-      ctx.check(child->bus() == shared_bus);
+      ctx.check(b.children()[0] == child, "the stored child should be the one added");
+      ctx.check(child->bus() == shared_bus, "add() should propagate the bin's bus to the child");
     }},
     {"remove() drops a child", [](test_context &ctx) {
       bin b("b");
       auto child = std::make_shared<element>("child");
       b.add(child);
       b.remove(child);
-      ctx.check(b.children().empty());
+      ctx.check(b.children().empty(), "remove() should drop the child from the bin");
     }},
     {"set_state() propagates sink-first upward and source-first downward", [](test_context &ctx) {
       bin b("b");
@@ -97,7 +97,7 @@ struct bin_test : public test_group {
       b.add(ok_child);
       b.add(failing_child);
 
-      ctx.check(b.set_state(state::ready) == state_change_return::failure);
+      ctx.check(b.set_state(state::ready) == state_change_return::failure, "a failing child's on_change_state should fail the bin's set_state()");
     }},
   }) {}
 };

@@ -40,7 +40,7 @@ struct bus_test : public test_group {
     {"pop() times out with nullopt on an empty queue", [](test_context &ctx) {
       bus b;
       auto result = b.pop(std::chrono::milliseconds(10));
-      ctx.check(!result.has_value());
+      ctx.check(!result.has_value(), "pop() on an empty queue should time out with nullopt");
     }},
     {"message_posted fires with the posted message", [](test_context &ctx) {
       bus b;
@@ -56,7 +56,7 @@ struct bus_test : public test_group {
       b.post(msg);
 
       ctx.check_equal(count, 1);
-      ctx.check(seen_type == message_type::error);
+      ctx.check(seen_type == message_type::error, "message_posted should carry the posted message's type");
     }},
   }) {}
 };

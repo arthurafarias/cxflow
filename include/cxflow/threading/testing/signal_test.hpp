@@ -75,7 +75,7 @@ struct signal_test : public test_group {
       sig(); // the slot removed itself, so this should not increment count again
 
       ctx.check_equal(count, 1);
-      ctx.check(!self_connection.connected());
+      ctx.check(!self_connection.connected(), "a slot that disconnects itself mid-emission should end up disconnected");
     }},
     {"emit_async() runs the slot on the given pool", [](test_context &ctx) {
       threading::signal<> sig;

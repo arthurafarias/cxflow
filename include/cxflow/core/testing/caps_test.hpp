@@ -21,15 +21,15 @@ struct caps_test : public test_group {
   caps_test() : test_group("caps", {
     {"any() reports is_any() and is compatible with anything", [](test_context &ctx) {
       caps a = caps::any();
-      ctx.check(a.is_any());
+      ctx.check(a.is_any(), "caps::any() should report is_any()");
 
       caps b;
       b.add(structure("audio/x-raw"));
-      ctx.check(a.is_compatible_with(b));
-      ctx.check(b.is_compatible_with(a));
+      ctx.check(a.is_compatible_with(b), "any caps should be compatible with any other caps");
+      ctx.check(b.is_compatible_with(a), "any other caps should be compatible with any caps");
     }},
     {"a default-constructed caps is not any()", [](test_context &ctx) {
-      ctx.check(!caps().is_any());
+      ctx.check(!caps().is_any(), "a default-constructed caps should not report is_any()");
     }},
     {"multi-structure compatibility requires at least one matching pair", [](test_context &ctx) {
       caps a;
@@ -38,25 +38,25 @@ struct caps_test : public test_group {
 
       caps matching;
       matching.add(structure("video/x-raw"));
-      ctx.check(a.is_compatible_with(matching));
+      ctx.check(a.is_compatible_with(matching), "caps with a matching structure pair should be compatible");
 
       caps unrelated;
       unrelated.add(structure("text/plain"));
-      ctx.check(!a.is_compatible_with(unrelated));
+      ctx.check(!a.is_compatible_with(unrelated), "caps with no matching structure pair should not be compatible");
     }},
     {"intersect(): any & any stays any", [](test_context &ctx) {
-      ctx.check(caps::any().intersect(caps::any()).is_any());
+      ctx.check(caps::any().intersect(caps::any()).is_any(), "any() intersected with any() should stay any()");
     }},
     {"intersect(): any & X returns X, X & any returns X", [](test_context &ctx) {
       caps x;
       x.add(structure("audio/x-raw"));
 
       caps left = caps::any().intersect(x);
-      ctx.check(!left.is_any());
+      ctx.check(!left.is_any(), "any() intersected with X should not be any()");
       ctx.check_equal(left.structures().size(), std::size_t{1});
 
       caps right = x.intersect(caps::any());
-      ctx.check(!right.is_any());
+      ctx.check(!right.is_any(), "X intersected with any() should not be any()");
       ctx.check_equal(right.structures().size(), std::size_t{1});
     }},
     {"intersect() keeps this side's structure for each compatible pair", [](test_context &ctx) {

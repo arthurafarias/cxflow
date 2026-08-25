@@ -32,7 +32,7 @@ struct element_factory_test : public test_group {
     }},
     {"create() for an unknown type returns nullptr", [](test_context &ctx) {
       auto instance = element_factory::create("element_factory_test.does_not_exist", "x");
-      ctx.check(instance == nullptr);
+      ctx.check(instance == nullptr, "create() for an unregistered type should return nullptr");
     }},
   }) {}
 };

@@ -20,11 +20,11 @@ struct pipeline_test : public test_group {
   pipeline_test() : test_group("pipeline", {
     {"constructs with a non-null bus", [](test_context &ctx) {
       pipeline p("p");
-      ctx.check(p.element::bus() != nullptr);
+      ctx.check(p.element::bus() != nullptr, "a pipeline should construct with a non-null bus");
     }},
     {"bus() hides element::bus(), returning the same underlying bus", [](test_context &ctx) {
       pipeline p("p");
-      ctx.check(&p.bus() == p.element::bus().get());
+      ctx.check(&p.bus() == p.element::bus().get(), "bus() should return the same underlying bus as element::bus()");
     }},
     {"a child added to the pipeline can post through its bus end to end", [](test_context &ctx) {
       pipeline p("pipe");
@@ -37,7 +37,7 @@ struct pipeline_test : public test_group {
 
       auto popped = p.bus().pop(std::chrono::milliseconds(0));
       ctx.require(popped.has_value(), "posting through the child should reach the pipeline's bus");
-      ctx.check(popped->type == message_type::eos);
+      ctx.check(popped->type == message_type::eos, "the popped message should be of type eos");
     }},
   }) {}
 };

@@ -23,7 +23,7 @@ struct fake_sink_test : public test_group {
       elements::fake_sink::register_type();
       auto instance = element_factory::create("fake_sink", "sink-instance");
       ctx.require(instance != nullptr, "element_factory should produce a fake_sink instance");
-      ctx.check(instance->get_static_pad("sink") != nullptr);
+      ctx.check(instance->get_static_pad("sink") != nullptr, "fake_sink should expose a 'sink' pad");
     }},
     {"chain() counts every buffer received", [](test_context &ctx) {
       auto sink = std::make_shared<elements::fake_sink>("sink");
@@ -52,12 +52,12 @@ struct fake_sink_test : public test_group {
       pad &src_pad = upstream.add_pad(std::make_unique<pad>("src", pad::direction::src, upstream));
       ctx.require(src_pad.link(*sink_pad), "linking upstream to fake_sink should succeed");
 
-      ctx.check(src_pad.send_event(event{event_type::eos}));
+      ctx.check(src_pad.send_event(event{event_type::eos}), "send_event(eos) should succeed");
 
       auto popped = b->pop(std::chrono::milliseconds(0));
       ctx.require(popped.has_value(), "handle_event(eos) should post a message");
-      ctx.check(popped->type == message_type::eos);
-      ctx.check(popped->source.lock() == sink);
+      ctx.check(popped->type == message_type::eos, "the posted message should be of type eos");
+      ctx.check(popped->source.lock() == sink, "the posted message's source should be this sink");
     }},
   }) {}
 };

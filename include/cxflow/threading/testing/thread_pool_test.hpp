@@ -56,7 +56,7 @@ struct thread_pool_test : public test_group {
       ctx.check(ran.load(), "a later submission should still run after a prior task threw");
     }},
     {"instance() returns the same reference across calls", [](test_context &ctx) {
-      ctx.check(&threading::thread_pool::instance() == &threading::thread_pool::instance());
+      ctx.check(&threading::thread_pool::instance() == &threading::thread_pool::instance(), "instance() should return the same reference across calls");
     }},
   }) {}
 };
