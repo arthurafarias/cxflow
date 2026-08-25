@@ -1,0 +1,31 @@
+// ---------------------------------------------------------------------------
+// PROPRIETARY CODE – Arthur de Araújo Farias 2025
+// All rights reserved.  No part of this file may be reproduced, stored in a
+// retrieval system, or transmitted in any form or by any means—electronic,
+// mechanical, photocopying, recording, or otherwise—without the prior written
+// permission of the copyright holder.
+// ---------------------------------------------------------------------------
+
+#pragma once
+
+#include <media/streamer/testing/test_group.hpp>
+#include <media/streamer/core/state.hpp>
+
+namespace media::streamer::testing {
+
+struct state_test : public test_group {
+  state_test() : test_group("state", {
+    {"state enumerators are ordered null < ready < paused < playing", [](test_context &ctx) {
+      // element::set_state()'s single-step walk (see element.hpp) relies on
+      // this exact ordering via static_cast<int> comparisons - reordering the
+      // enum would silently break it.
+      ctx.check(static_cast<int>(state::null) < static_cast<int>(state::ready));
+      ctx.check(static_cast<int>(state::ready) < static_cast<int>(state::paused));
+      ctx.check(static_cast<int>(state::paused) < static_cast<int>(state::playing));
+    }},
+  }) {}
+};
+
+inline static state_test state_test_instance;
+
+} // namespace media::streamer::testing
