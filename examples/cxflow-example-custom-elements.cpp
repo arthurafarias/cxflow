@@ -6,10 +6,22 @@
 // permission of the copyright holder.
 // ---------------------------------------------------------------------------
 
-// Builds fake_src ! identity ! fake_sink and runs it to demonstrate the
+// Builds app_src ! identity ! app_sink and runs it to demonstrate the
 // concrete end-to-end proof that pad linking, task-driven push scheduling,
 // state propagation, and the bus/event/message split all work together, not
 // just in isolation.
+//
+// app_src/app_sink are this file's own custom element types (registered
+// under "app_src"/"app_sink", same shape as fake_src/fake_sink but defined
+// right here to show what writing one looks like). app_src stamps each
+// buffer with a monotonically increasing sequence number (buffer::offset)
+// alongside its pts; app_sink prints both as each buffer arrives. Since
+// push() is synchronous all the way from app_src's dedicated task thread
+// down through identity's passthrough to app_sink's chain (signal::emit(),
+// not emit_async(), per threading/signal.hpp), the printed sequence must
+// come out strictly increasing - app_sink flags it loudly if it ever
+// doesn't, making this a live check of that ordering guarantee rather than
+// just an assertion about it.
 //
 // SRS-001 §5.8/§7.4: fully event-driven, not merely event-capable. Every
 // reaction - buffer counts, state transitions, EOS/error - is wired through
@@ -39,15 +51,15 @@
 #include <iostream>
 #include <mutex>
 #include <string_view>
+#include <thread>
 
 #include <cxflow/core/element_factory.hpp>
 #include <cxflow/core/message.hpp>
 #include <cxflow/core/pad.hpp>
 #include <cxflow/core/pipeline.hpp>
 #include <cxflow/core/state.hpp>
-#include <cxflow/elements/fake_sink.hpp>
-#include <cxflow/elements/fake_src.hpp>
 #include <cxflow/elements/identity.hpp>
+#include <cxflow/threading/task.hpp>
 
 using namespace cxflow;
 using namespace cxflow::elements;
@@ -72,6 +84,7 @@ private:
 
   pad &sink_pad_;
   std::atomic<std::uint64_t> buffers_received_{0};
+  std::uint64_t expected_offset_ = 0;
 };
 
 inline app_sink::app_sink(std::string name)
@@ -85,8 +98,25 @@ inline void app_sink::register_type() {
                                   [](std::string name) { return std::make_shared<app_sink>(std::move(name)); });
 }
 
-inline flow_return app_sink::chain(pad & /*sink_pad*/, buffer /*buf*/) {
+inline flow_return app_sink::chain(pad & /*sink_pad*/, buffer buf) {
   ++buffers_received_;
+
+  // buffer::offset doubles as the sequence number here (buffer has no
+  // dedicated seq field); buffer::pts is the timestamp app_src stamped it
+  // with at push time. Printed on the thread that actually ran this chain
+  // call - with a fully synchronous push path there is exactly one such
+  // thread (app_src's task thread), so the sequence below is the direct,
+  // observable proof of in-order delivery, not an assumption about it.
+  std::cout << "sink: seq=" << buf.offset << " pts=" << buf.pts.value_or(std::chrono::nanoseconds{0}).count()
+            << "ns thread=" << std::this_thread::get_id();
+
+  if (buf.offset != expected_offset_) {
+    std::cout << "  *** OUT OF ORDER (expected seq=" << expected_offset_ << ") ***";
+  }
+  std::cout << "\n";
+
+  expected_offset_ = buf.offset + 1;
+
   return flow_return::ok;
 }
 
@@ -182,6 +212,7 @@ inline void app_src::push_loop() {
 
   buffer buf;
   buf.pts = std::chrono::duration_cast<std::chrono::nanoseconds>(current_interval) * pushed_;
+  buf.offset = static_cast<std::uint64_t>(pushed_); // doubles as the sequence number app_sink prints
   ++pushed_;
 
   src_pad_.push(std::move(buf));
@@ -217,15 +248,15 @@ constexpr std::string_view to_string(state s) {
 } // namespace
 
 int main() {
-  fake_src::register_type();
+  app_src::register_type();
   identity::register_type();
-  fake_sink::register_type();
+  app_sink::register_type();
 
-  pipeline pipe("fake-pipeline");
+  pipeline pipe("app-pipeline");
 
-  auto src = element_factory::create("fake_src", "src");
+  auto src = element_factory::create("app_src", "src");
   auto id = element_factory::create("identity", "id");
-  auto sink = element_factory::create("fake_sink", "sink");
+  auto sink = element_factory::create("app_sink", "sink");
 
   pipe.add(src);
   pipe.add(id);
