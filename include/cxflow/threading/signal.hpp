@@ -139,11 +139,15 @@ public:
   }
 
   void emit_async(thread_pool &pool, args_types... args) const {
+    emit_async(pool, task_priority::normal, args...);
+  }
+
+  void emit_async(thread_pool &pool, task_priority priority, args_types... args) const {
     static_assert((!std::is_reference_v<args_types> && ...),
                   "signal::emit_async cannot safely capture reference-typed arguments "
                   "(the referent may not outlive the deferred call) - use emit() instead");
     for (const auto &slot : snapshot_sinks()) {
-      pool.submit([slot, args...]() { slot(args...); });
+      pool.submit([slot, args...]() { slot(args...); }, priority);
     }
   }
 

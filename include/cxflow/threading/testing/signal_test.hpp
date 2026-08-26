@@ -13,7 +13,10 @@
 
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <cstddef>
+#include <mutex>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -88,6 +91,52 @@ struct signal_test : public test_group {
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
       }
       ctx.check(ran.load(), "emit_async() should eventually run the connected slot");
+    }},
+    {"emit_async(pool, priority, ...) dispatches the slot at the given priority", [](test_context &ctx) {
+      threading::signal<const char *> sig;
+      threading::thread_pool pool(1);
+      std::mutex gate_mutex;
+      std::condition_variable gate_cond;
+      bool release = false;
+      std::atomic<bool> blocker_started{false};
+
+      // Occupy the sole worker so the emit_async() calls below queue up
+      // instead of racing straight to a free worker in emission order.
+      pool.submit([&] {
+        blocker_started = true;
+        std::unique_lock lock(gate_mutex);
+        gate_cond.wait(lock, [&] { return release; });
+      });
+      for (int i = 0; i < 200 && !blocker_started.load(); ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+      }
+
+      std::mutex order_mutex;
+      std::vector<std::string> order;
+      sig.connect([&](const char *label) {
+        std::unique_lock lock(order_mutex);
+        order.emplace_back(label);
+      });
+
+      // Emitted low -> high: the worst case for plain FIFO, so this only
+      // passes if the priority argument - not emission order - wins.
+      sig.emit_async(pool, threading::task_priority::low, "low");
+      sig.emit_async(pool, threading::task_priority::high, "high");
+
+      {
+        std::unique_lock lock(gate_mutex);
+        release = true;
+      }
+      gate_cond.notify_one();
+
+      for (int i = 0; i < 200 && order.size() < 2; ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+      }
+
+      if (ctx.check_equal(order.size(), std::size_t{2})) {
+        ctx.check_equal(order[0], std::string("high"));
+        ctx.check_equal(order[1], std::string("low"));
+      }
     }},
   }) {}
 };
