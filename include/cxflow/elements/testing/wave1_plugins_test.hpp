@@ -21,7 +21,7 @@ struct wave1_plugins_test : public test_group {
   wave1_plugins_test() : test_group("wave1_plugins", {
     {"every Wave 1 entry is discoverable via plugin_registry and still create()-able through element_factory",
      [](test_context &ctx) {
-       static constexpr std::array<std::pair<const char *, const char *>, 14> entries{{
+       static constexpr std::array<std::pair<const char *, const char *>, 23> entries{{
            {"cxflow-io-elements", "file_src"},
            {"cxflow-io-elements", "file_sink"},
            {"cxflow-io-elements", "fd_src"},
@@ -36,6 +36,15 @@ struct wave1_plugins_test : public test_group {
            {"cxflow-container-elements", "wav_demux"},
            {"cxflow-container-elements", "au_mux"},
            {"cxflow-container-elements", "au_demux"},
+           {"cxflow-audio-dsp-elements", "audio_test_src"},
+           {"cxflow-audio-dsp-elements", "volume"},
+           {"cxflow-audio-dsp-elements", "audio_convert"},
+           {"cxflow-audio-dsp-elements", "audio_resample"},
+           {"cxflow-audio-dsp-elements", "audio_rate"},
+           {"cxflow-video-elements", "video_test_src"},
+           {"cxflow-video-elements", "video_convert"},
+           {"cxflow-video-elements", "video_scale"},
+           {"cxflow-video-elements", "video_rate"},
        }};
 
        for (const auto &[plugin_name, type_name] : entries) {

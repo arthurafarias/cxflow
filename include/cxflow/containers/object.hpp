@@ -11,10 +11,12 @@
 #include "cxflow/containers/map.hpp"
 #include "cxflow/threading/signal.hpp"
 
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -105,11 +107,39 @@ public:
 
   // std::nullopt when name is absent. Throws std::bad_variant_access (the
   // same as a bare std::get<ValueType>) when name is present but holds a
-  // different alternative.
+  // different alternative - with one deliberate exception: requesting
+  // int64_t/uint64_t against a property that holds the *other* signed-
+  // ness coerces instead of throwing, provided the stored value actually
+  // fits (non-negative for int64_t->uint64_t; within int64_t's range for
+  // uint64_t->int64_t). Found necessary in practice, not designed
+  // speculatively: SRS-003's text-grammar parser has exactly one integer
+  // literal type (int64_t, chosen so fake_src's own int64_t-typed
+  // "num-buffers" round-trips - see pipeline_parser.hpp's own comment),
+  // so any element property typed uint64_t (a completely ordinary,
+  // independent choice - e.g. queue's "max-size-buffers", fake_src's own
+  // "interval-ms") throws the moment a text-grammar pipeline sets it,
+  // crashing the whole process rather than erroring gracefully. Every
+  // other type combination (bool vs string, double vs int64_t, ...) is
+  // unaffected and still throws exactly as before - this narrows to the
+  // one collision two independently-reasonable integer type choices can
+  // produce, not a general type-coercion layer.
   template <typename ValueType> std::optional<ValueType> property_get(const std::string &name) const {
     auto value = property_get_variant(name);
     if (!value) {
       return std::nullopt;
+    }
+    if constexpr (std::is_same_v<ValueType, std::uint64_t>) {
+      if (const auto *signed_v = std::get_if<std::int64_t>(&*value)) {
+        if (*signed_v >= 0) {
+          return static_cast<std::uint64_t>(*signed_v);
+        }
+      }
+    } else if constexpr (std::is_same_v<ValueType, std::int64_t>) {
+      if (const auto *unsigned_v = std::get_if<std::uint64_t>(&*value)) {
+        if (*unsigned_v <= static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())) {
+          return static_cast<std::int64_t>(*unsigned_v);
+        }
+      }
     }
     return std::get<ValueType>(*value);
   }

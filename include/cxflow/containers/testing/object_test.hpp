@@ -13,6 +13,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <limits>
 #include <string>
 #include <thread>
 #include <vector>
@@ -166,6 +167,36 @@ struct object_test : public test_group {
         auto v = obj.property_get<std::uint64_t>("key-" + std::to_string(t));
         ctx.check(v.has_value() && *v == sets_per_thread - 1, "each thread's key should end on its last written value, with no lost or torn writes");
       }
+    }},
+    {"property_get<uint64_t>() coerces a non-negative int64_t-stored property instead of throwing", [](test_context &ctx) {
+      containers::object obj;
+      obj.property_set("count", std::int64_t{42});
+      auto v = obj.property_get<std::uint64_t>("count");
+      ctx.check(v.has_value() && *v == 42, "a non-negative int64_t should coerce to uint64_t");
+    }},
+    {"property_get<uint64_t>() still throws for a negative int64_t-stored property", [](test_context &ctx) {
+      containers::object obj;
+      obj.property_set("count", std::int64_t{-1});
+      ctx.check_throws<std::bad_variant_access>([&] { (void)obj.property_get<std::uint64_t>("count"); },
+                                                  "a negative int64_t cannot represent a uint64_t");
+    }},
+    {"property_get<int64_t>() coerces an in-range uint64_t-stored property instead of throwing", [](test_context &ctx) {
+      containers::object obj;
+      obj.property_set("count", std::uint64_t{42});
+      auto v = obj.property_get<std::int64_t>("count");
+      ctx.check(v.has_value() && *v == 42, "an in-range uint64_t should coerce to int64_t");
+    }},
+    {"property_get<int64_t>() still throws for a uint64_t-stored property beyond int64_t's range", [](test_context &ctx) {
+      containers::object obj;
+      obj.property_set("count", std::numeric_limits<std::uint64_t>::max());
+      ctx.check_throws<std::bad_variant_access>([&] { (void)obj.property_get<std::int64_t>("count"); },
+                                                  "a uint64_t beyond int64_t's range cannot coerce");
+    }},
+    {"property_get<T>() for a non-integer type still throws on a genuine mismatch", [](test_context &ctx) {
+      containers::object obj;
+      obj.property_set("name", std::string("hello"));
+      ctx.check_throws<std::bad_variant_access>([&] { (void)obj.property_get<bool>("name"); },
+                                                  "the int64_t/uint64_t coercion must not widen to unrelated types");
     }},
     {"concurrent iteration alongside concurrent property_set() never crashes or reads torn data", [](test_context &ctx) {
       containers::object obj;
