@@ -70,6 +70,21 @@ install(FILES
 )
 
 add_subdirectory(examples)
+
+# Optional, external-dependency plugins - see docs.src's Plugin Folder
+# Convention guideline. Each plugin/CMakeLists.txt does its own
+# find_package()/pkg_check_modules() detection and produces no targets if
+# its library is absent, so this stays on by default without forcing every
+# plugin's dependency onto a machine that doesn't have it. Processed before
+# tools/ so cxflow-launch can conditionally link against a plugin's own
+# INTERFACE target (Plugin Folder Convention REQ-P.5) - a target must
+# already exist by the time a sibling directory's CMakeLists.txt refers to
+# it.
+option(CXFLOW_BUILD_PLUGINS "Build optional external-dependency plugins under plugins/" ON)
+if(CXFLOW_BUILD_PLUGINS)
+  add_subdirectory(plugins)
+endif()
+
 add_subdirectory(tools)
 
 # Self-hosted test facility: no external test framework (gtest/catch2/etc),

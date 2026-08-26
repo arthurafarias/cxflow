@@ -34,6 +34,10 @@
 #include <cxflow/elements/identity.hpp>
 #include <cxflow/elements/wave1_plugins.hpp>
 
+#ifdef CXFLOW_PLUGIN_PULSE_ENABLED
+#include <cxflow/plugins/pulse/pulse_plugin.hpp> // SRS-008 - self-registers via plugin_registration on include
+#endif
+
 using namespace cxflow;
 
 namespace {
