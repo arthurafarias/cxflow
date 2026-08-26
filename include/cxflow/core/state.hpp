@@ -27,4 +27,18 @@ enum class state_change_return {
   no_preroll,
 };
 
+inline const char *to_string(state s) {
+  switch (s) {
+  case state::null:
+    return "null";
+  case state::ready:
+    return "ready";
+  case state::paused:
+    return "paused";
+  case state::playing:
+    return "playing";
+  }
+  return "unknown";
+}
+
 } // namespace cxflow

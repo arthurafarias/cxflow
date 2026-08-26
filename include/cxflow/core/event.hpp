@@ -23,4 +23,16 @@ struct event {
   event_type type;
 };
 
+inline const char *to_string(event_type t) {
+  switch (t) {
+  case event_type::flush_start:
+    return "flush_start";
+  case event_type::flush_stop:
+    return "flush_stop";
+  case event_type::eos:
+    return "eos";
+  }
+  return "unknown";
+}
+
 } // namespace cxflow

@@ -16,6 +16,7 @@
 #include <cxflow/core/caps.hpp>
 #include <cxflow/core/event.hpp>
 #include <cxflow/core/flow_return.hpp>
+#include <cxflow/logging/journal.hpp>
 #include <cxflow/threading/signal.hpp>
 
 namespace cxflow {
@@ -127,22 +128,28 @@ private:
 
 inline bool pad::link(pad &sink_pad) {
   if (direction_ != direction::src || sink_pad.direction_ != direction::sink) {
+    journal::warn("pad '{}' failed to link to '{}': direction mismatch (must be src -> sink)", name_,
+                  sink_pad.name_);
     return false;
   }
   if (is_linked() || sink_pad.is_linked()) {
+    journal::warn("pad '{}' failed to link to '{}': one side already has a peer", name_, sink_pad.name_);
     return false;
   }
   if (!caps_.is_compatible_with(sink_pad.caps_)) {
+    journal::warn("pad '{}' failed to link to '{}': incompatible caps", name_, sink_pad.name_);
     return false;
   }
 
   peer_ = &sink_pad;
   sink_pad.peer_ = this;
+  journal::debug("pad '{}' linked to '{}'", name_, sink_pad.name_);
   return true;
 }
 
 inline void pad::unlink() {
   if (peer_ != nullptr) {
+    journal::debug("pad '{}' unlinked from '{}'", name_, peer_->name_);
     peer_->peer_ = nullptr;
     peer_ = nullptr;
   }
@@ -178,8 +185,12 @@ inline bool pad::send_event(const event &ev) {
 inline bool pad::receive_event(const event &ev) {
   if (ev.type == event_type::flush_start) {
     flushing_ = true;
+    journal::debug("pad '{}' received flush_start", name_);
   } else if (ev.type == event_type::flush_stop) {
     flushing_ = false;
+    journal::debug("pad '{}' received flush_stop", name_);
+  } else if (ev.type == event_type::eos) {
+    journal::info("pad '{}' received eos", name_);
   }
 
   return event_fn_ ? event_fn_(*this, ev) : true;

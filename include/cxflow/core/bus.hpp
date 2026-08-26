@@ -16,6 +16,7 @@
 
 #include <cxflow/containers/object.hpp>
 #include <cxflow/core/message.hpp>
+#include <cxflow/logging/journal.hpp>
 #include <cxflow/threading/signal.hpp>
 
 namespace cxflow {
@@ -49,6 +50,24 @@ private:
 };
 
 inline void bus::post(message msg) {
+  // Level follows message_type's own severity - a posted error/warning is
+  // exactly the kind of event journal exists to surface, while routine
+  // state_changed/buffering messages stay at debug.
+  switch (msg.type) {
+  case message_type::error:
+    journal::error("bus posting error message: {}", msg.debug_info);
+    break;
+  case message_type::warning:
+    journal::warn("bus posting warning message: {}", msg.debug_info);
+    break;
+  case message_type::eos:
+    journal::info("bus posting eos message: {}", msg.debug_info);
+    break;
+  default:
+    journal::debug("bus posting {} message: {}", to_string(msg.type), msg.debug_info);
+    break;
+  }
+
   {
     std::unique_lock lock(mutex_);
     queue_.push_back(msg);

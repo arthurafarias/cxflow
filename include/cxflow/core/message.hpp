@@ -32,4 +32,22 @@ struct message {
   std::exception_ptr error; // populated for message_type::error/warning
 };
 
+inline const char *to_string(message_type t) {
+  switch (t) {
+  case message_type::state_changed:
+    return "state_changed";
+  case message_type::eos:
+    return "eos";
+  case message_type::error:
+    return "error";
+  case message_type::warning:
+    return "warning";
+  case message_type::info:
+    return "info";
+  case message_type::buffering:
+    return "buffering";
+  }
+  return "unknown";
+}
+
 } // namespace cxflow

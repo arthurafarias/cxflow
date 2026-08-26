@@ -16,6 +16,7 @@
 #include <cxflow/core/element.hpp>
 #include <cxflow/core/element_factory.hpp>
 #include <cxflow/core/event.hpp>
+#include <cxflow/logging/journal.hpp>
 #include <cxflow/threading/task.hpp>
 
 namespace cxflow::elements {
@@ -90,11 +91,14 @@ inline state_change_return fake_src::on_change_state(state from, state to) {
     if (!task_.is_running()) {
       pushed_ = 0;
       task_.start();
+      journal::debug("fake_src '{}' started push task", name());
     } else {
       task_.resume();
+      journal::debug("fake_src '{}' resumed push task", name());
     }
   } else if (from == state::playing && to == state::paused) {
     task_.pause();
+    journal::debug("fake_src '{}' paused push task", name());
   } else if (from == state::ready && to == state::null) {
     // Must be fully stopped (not merely paused) before the pipeline is torn
     // all the way down. Safe to join here: by this point playing->paused
@@ -102,6 +106,7 @@ inline state_change_return fake_src::on_change_state(state from, state to) {
     // this call always comes from the application thread driving
     // set_state(), never from the task thread itself.
     task_.stop();
+    journal::debug("fake_src '{}' stopped push task", name());
   }
 
   return state_change_return::success;

@@ -15,6 +15,7 @@
 #include <string>
 
 #include <cxflow/core/element.hpp>
+#include <cxflow/logging/journal.hpp>
 
 namespace cxflow {
 
@@ -55,6 +56,7 @@ inline element_factory_registry &get_element_factory_registry() {
 inline void element_factory::register_type(std::string type_name, creator_function creator) {
   detail::element_factory_registry &r = detail::get_element_factory_registry();
   std::unique_lock lock(r.mutex);
+  journal::debug("element_factory registered type '{}'", type_name);
   r.creators[std::move(type_name)] = std::move(creator);
 }
 
@@ -64,12 +66,14 @@ inline std::shared_ptr<element> element_factory::create(const std::string &type_
 
   auto it = r.creators.find(type_name);
   if (it == r.creators.end()) {
+    journal::warn("element_factory failed to create '{}': no type '{}' registered", instance_name, type_name);
     return nullptr;
   }
 
   auto creator = it->second;
   lock.unlock();
 
+  journal::debug("element_factory creating '{}' of type '{}'", instance_name, type_name);
   return creator(std::move(instance_name));
 }
 

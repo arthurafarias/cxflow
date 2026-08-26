@@ -231,20 +231,6 @@ extern "C" void handle_sigint(int /*signum*/) {
   shutdown_cv.notify_all();
 }
 
-constexpr std::string_view to_string(state s) {
-  switch (s) {
-  case state::null:
-    return "null";
-  case state::ready:
-    return "ready";
-  case state::paused:
-    return "paused";
-  case state::playing:
-    return "playing";
-  }
-  return "?";
-}
-
 } // namespace
 
 int main() {

@@ -16,6 +16,7 @@
 #include <vector>
 
 #include <cxflow/core/element.hpp>
+#include <cxflow/logging/journal.hpp>
 
 namespace cxflow {
 
@@ -59,10 +60,12 @@ private:
 
 inline void bin::add(std::shared_ptr<element> child) {
   child->set_bus(bus());
+  journal::debug("bin '{}' added child '{}'", name(), child->name());
   children_.push_back(std::move(child));
 }
 
 inline void bin::remove(const std::shared_ptr<element> &child) {
+  journal::debug("bin '{}' removed child '{}'", name(), child->name());
   children_.erase(std::remove(children_.begin(), children_.end(), child), children_.end());
 }
 

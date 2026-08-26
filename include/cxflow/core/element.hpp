@@ -18,6 +18,7 @@
 #include <cxflow/core/bus.hpp>
 #include <cxflow/core/pad.hpp>
 #include <cxflow/core/state.hpp>
+#include <cxflow/logging/journal.hpp>
 #include <cxflow/threading/signal.hpp>
 
 namespace cxflow {
@@ -127,6 +128,7 @@ inline pad &element::add_pad(std::unique_ptr<pad> new_pad) {
   pads_.push_back(std::move(new_pad));
   lock.unlock();
 
+  journal::debug("element '{}' added pad '{}'", name_, ref.name());
   pad_added(*this, ref);
   return ref;
 }
@@ -151,9 +153,11 @@ inline state_change_return element::set_state(state target) {
 
   while (current != target) {
     state next = detail::element_step_towards(current, target);
+    journal::debug("element '{}' changing state {} -> {}", name_, to_string(current), to_string(next));
     state_change_return result = on_change_state(current, next);
 
     if (result == state_change_return::failure) {
+      journal::warn("element '{}' failed to change state {} -> {}", name_, to_string(current), to_string(next));
       return state_change_return::failure;
     }
 
