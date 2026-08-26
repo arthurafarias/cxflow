@@ -166,10 +166,35 @@ pipeline_parser::parse(const std::string &description) {
     if (pending_link_from) {
       pad *src_pad = detail::pipeline_parser_first_unlinked(*pending_link_from, pad::direction::src);
       pad *sink_pad = detail::pipeline_parser_first_unlinked(*el, pad::direction::sink);
-      if (src_pad == nullptr || sink_pad == nullptr || !src_pad->link(*sink_pad)) {
+
+      if (sink_pad == nullptr) {
         return std::unexpected(
             error{"cannot link '" + pending_link_from->name() + "' to '" + el->name() + "'", type_token.position});
       }
+
+      if (src_pad != nullptr) {
+        if (!src_pad->link(*sink_pad)) {
+          return std::unexpected(
+              error{"cannot link '" + pending_link_from->name() + "' to '" + el->name() + "'", type_token.position});
+        }
+      } else {
+        // SRS-004 §8 OPEN-M2: the upstream element has no src pad yet (a
+        // demuxer that only knows its output format once it has parsed
+        // enough of the stream, e.g. wav_demux/au_demux) - defer the link
+        // to the moment element::pad_added fires for it, exactly the way
+        // gst_parse_launch itself handles a dynamic-pad element on the left
+        // of '!'. A link that fails once the pad exists (incompatible
+        // caps) is reported the same way any other runtime pad::link()
+        // failure already is - a warn-level journal entry from pad::link()
+        // itself - since this function has long since returned by then and
+        // has no error channel left to report through.
+        pending_link_from->pad_added.connect([sink_pad](element &, pad &new_pad) {
+          if (new_pad.dir() == pad::direction::src && !new_pad.is_linked() && !sink_pad->is_linked()) {
+            new_pad.link(*sink_pad);
+          }
+        });
+      }
+
       pending_link_from.reset();
     }
 

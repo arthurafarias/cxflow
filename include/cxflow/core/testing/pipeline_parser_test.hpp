@@ -14,6 +14,7 @@
 #include <cxflow/elements/fake_sink.hpp>
 #include <cxflow/elements/fake_src.hpp>
 #include <cxflow/elements/identity.hpp>
+#include <cxflow/elements/wav_demux.hpp>
 #include <cxflow/testing/test_group.hpp>
 
 #include <cstdint>
@@ -102,6 +103,21 @@ struct pipeline_parser_test : public test_group {
 
       auto &src = *(*result)->children()[0];
       ctx.check_equal(src.property_get<std::int64_t>("num-buffers").value_or(-99), std::int64_t{3});
+    }},
+    {"defers linking to a demuxer's dynamically-added src pad (SRS-004 §8 OPEN-M2)", [](test_context &ctx) {
+      elements::wav_demux::register_type();
+      elements::fake_sink::register_type();
+
+      auto result = pipeline_parser::parse("wav_demux ! fake_sink");
+      ctx.require(result.has_value(), "linking to an element with no src pad yet should not be a parse error");
+
+      auto pipe = *result;
+      element &demux = *pipe->children()[0];
+      element &sink = *pipe->children()[1];
+
+      pad &new_src = demux.add_pad(std::make_unique<pad>("src", pad::direction::src, demux));
+      ctx.check(new_src.is_linked(), "the dynamically-added pad should link once it appears");
+      ctx.check(new_src.peer() == sink.get_static_pad("sink"), "it should link specifically to the downstream sink pad");
     }},
     {"an unknown element type is a parse error naming the offending token", [](test_context &ctx) {
       auto result = pipeline_parser::parse("pipeline_parser_test.does_not_exist");

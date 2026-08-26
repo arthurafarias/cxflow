@@ -32,6 +32,7 @@
 #include <cxflow/elements/fake_sink.hpp>
 #include <cxflow/elements/fake_src.hpp>
 #include <cxflow/elements/identity.hpp>
+#include <cxflow/elements/wave1_plugins.hpp>
 
 using namespace cxflow;
 
