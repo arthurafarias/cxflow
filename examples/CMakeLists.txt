@@ -6,7 +6,8 @@
 ## permission of the copyright holder.
 ## ---------------------------------------------------------------------------
 
-add_executable(fake_pipeline fake_pipeline.cpp)
+add_executable(cxflow-example-fake-pipeline cxflow-example-fake-pipeline.cpp)
+target_link_libraries(cxflow-example-fake-pipeline PRIVATE cxflow)
 
-target_link_libraries(fake_pipeline PRIVATE cxflow)
-# target_link_libraries(app_pipeline PRIVATE cxflow)
+add_executable(cxflow-example-custom-elements cxflow-example-custom-elements.cpp)
+target_link_libraries(cxflow-example-custom-elements PRIVATE cxflow)
