@@ -1,3 +1,5 @@
+.cache
+.claude
 build
 build-test
 database.db
