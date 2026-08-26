@@ -70,6 +70,7 @@ install(FILES
 )
 
 add_subdirectory(examples)
+add_subdirectory(tools)
 
 # Self-hosted test facility: no external test framework (gtest/catch2/etc),
 # cxflow stays dependency-free beyond the STL. Since the library

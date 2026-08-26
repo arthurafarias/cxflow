@@ -74,7 +74,16 @@ inline std::shared_ptr<element> element_factory::create(const std::string &type_
   lock.unlock();
 
   journal::debug("element_factory creating '{}' of type '{}'", instance_name, type_name);
-  return creator(std::move(instance_name));
+  auto instance = creator(std::move(instance_name));
+  // SRS-003 §5.3 (REQ-5.3.1): stamps the type name this instance was
+  // resolved under, so a generic serialization walk (pipeline::to_variant())
+  // can recover it later without a second, instance-keyed lookup - the only
+  // place in the system that knows both the type name and the freshly
+  // created instance at the same time.
+  if (instance) {
+    instance->set_registered_type_name(type_name);
+  }
+  return instance;
 }
 
 } // namespace cxflow

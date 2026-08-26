@@ -50,6 +50,17 @@ public:
 
   const std::string &name() const { return name_; }
 
+  // SRS-003 §5.3 (REQ-5.3.1's "type" field): the element_factory type name
+  // this instance was created under, stamped by element_factory::create()
+  // (element_factory.hpp) - empty for an instance constructed directly
+  // (e.g. `std::make_shared<element>(name)` in a test), since there is no
+  // registered type name to record. This is the one piece of "what kind of
+  // thing am I" element itself needs to hold for pipeline::to_variant() to
+  // serialize a child generically, without a second, per-element-type
+  // registry lookup keyed by instance identity.
+  const std::string &registered_type_name() const { return registered_type_name_; }
+  void set_registered_type_name(std::string type_name) { registered_type_name_ = std::move(type_name); }
+
   pad &add_pad(std::unique_ptr<pad> new_pad);
   pad *get_static_pad(const std::string &pad_name) const;
   const std::vector<std::unique_ptr<pad>> &pads() const { return pads_; }
@@ -101,6 +112,7 @@ protected:
 
 private:
   std::string name_;
+  std::string registered_type_name_;
 
   mutable std::mutex pads_mutex_;
   std::vector<std::unique_ptr<pad>> pads_;
