@@ -107,22 +107,30 @@ public:
 
   // std::nullopt when name is absent. Throws std::bad_variant_access (the
   // same as a bare std::get<ValueType>) when name is present but holds a
-  // different alternative - with one deliberate exception: requesting
-  // int64_t/uint64_t against a property that holds the *other* signed-
-  // ness coerces instead of throwing, provided the stored value actually
-  // fits (non-negative for int64_t->uint64_t; within int64_t's range for
-  // uint64_t->int64_t). Found necessary in practice, not designed
+  // different alternative - with deliberate exceptions, all in the same
+  // direction (widen an integer literal to a wider/differently-signed
+  // numeric type the property actually needs, never narrow one back
+  // down): requesting int64_t/uint64_t against a property holding the
+  // *other* signedness coerces instead of throwing, provided the stored
+  // value actually fits (non-negative for int64_t->uint64_t; within
+  // int64_t's range for uint64_t->int64_t); requesting double against a
+  // property holding int64_t or uint64_t coerces unconditionally (widening
+  // an integer to double is exact for any value this codebase's
+  // properties actually carry). Found necessary in practice, not designed
   // speculatively: SRS-003's text-grammar parser has exactly one integer
   // literal type (int64_t, chosen so fake_src's own int64_t-typed
   // "num-buffers" round-trips - see pipeline_parser.hpp's own comment),
-  // so any element property typed uint64_t (a completely ordinary,
-  // independent choice - e.g. queue's "max-size-buffers", fake_src's own
-  // "interval-ms") throws the moment a text-grammar pipeline sets it,
-  // crashing the whole process rather than erroring gracefully. Every
-  // other type combination (bool vs string, double vs int64_t, ...) is
-  // unaffected and still throws exactly as before - this narrows to the
-  // one collision two independently-reasonable integer type choices can
-  // produce, not a general type-coercion layer.
+  // so any element property independently typed uint64_t (queue's
+  // "max-size-buffers", fake_src's own "interval-ms") or double
+  // (audio_test_src's "freq", set via a plain integer-looking literal
+  // like "freq=440" with no decimal point) throws the moment a
+  // text-grammar pipeline sets it, crashing the whole process rather than
+  // erroring gracefully. Every other type combination (bool vs string,
+  // double vs a property that expects an *integer*, ...) is unaffected
+  // and still throws exactly as before - this narrows to the specific
+  // collisions an integer-literal-only grammar produces against
+  // independently-reasonable property type choices, not a general
+  // type-coercion layer.
   template <typename ValueType> std::optional<ValueType> property_get(const std::string &name) const {
     auto value = property_get_variant(name);
     if (!value) {
@@ -139,6 +147,13 @@ public:
         if (*unsigned_v <= static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())) {
           return static_cast<std::int64_t>(*unsigned_v);
         }
+      }
+    } else if constexpr (std::is_same_v<ValueType, double>) {
+      if (const auto *signed_v = std::get_if<std::int64_t>(&*value)) {
+        return static_cast<double>(*signed_v);
+      }
+      if (const auto *unsigned_v = std::get_if<std::uint64_t>(&*value)) {
+        return static_cast<double>(*unsigned_v);
       }
     }
     return std::get<ValueType>(*value);

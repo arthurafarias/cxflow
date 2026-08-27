@@ -198,6 +198,24 @@ struct object_test : public test_group {
       ctx.check_throws<std::bad_variant_access>([&] { (void)obj.property_get<bool>("name"); },
                                                   "the int64_t/uint64_t coercion must not widen to unrelated types");
     }},
+    {"property_get<double>() coerces an int64_t-stored property instead of throwing", [](test_context &ctx) {
+      containers::object obj;
+      obj.property_set("freq", std::int64_t{440}); // e.g. "freq=440" via the text grammar - no decimal point
+      auto v = obj.property_get<double>("freq");
+      ctx.check(v.has_value() && *v == 440.0, "an int64_t-stored property should coerce to double");
+    }},
+    {"property_get<double>() coerces a uint64_t-stored property instead of throwing", [](test_context &ctx) {
+      containers::object obj;
+      obj.property_set("freq", std::uint64_t{440});
+      auto v = obj.property_get<double>("freq");
+      ctx.check(v.has_value() && *v == 440.0, "a uint64_t-stored property should coerce to double");
+    }},
+    {"property_get<int64_t>() still throws for a double-stored property (no narrowing coercion)", [](test_context &ctx) {
+      containers::object obj;
+      obj.property_set("level", 1.5);
+      ctx.check_throws<std::bad_variant_access>([&] { (void)obj.property_get<std::int64_t>("level"); },
+                                                  "double->int64_t is a narrowing direction this coercion does not attempt");
+    }},
     {"concurrent iteration alongside concurrent property_set() never crashes or reads torn data", [](test_context &ctx) {
       containers::object obj;
       for (int i = 0; i < 50; ++i) {
