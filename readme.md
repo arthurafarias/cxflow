@@ -1,8 +1,3 @@
-<picture>
-  <source srcset="docs.src/resources/logo-composed-black.png" media="(prefers-color-scheme: dark)">
-  <img src="docs.src/resources/logo-composed-light.png" alt="CXFlow" height="72">
-</picture>
-
 CXFlow is a header-only, GStreamer-inspired dataflow pipeline framework for C++23.
 Pipelines are built from **elements** connected by **pads**: a source pushes
 `buffer`s downstream, sinks and filters consume and forward them, and
@@ -12,13 +7,6 @@ Every control-plane property — element state, custom tunables, pad caps —
 is a named `variant` value on a common `object` base, and every mutation is
 observed through a `threading::signal`, not discovered by polling.
 
-The project is in an early conceptual stage — the current pass proves the core
-loop end-to-end (pad linking, task-driven push scheduling, state propagation,
-the bus/event/message split, and a fully event-driven control plane) with a
-minimal set of elements. Many features are still under exploration —
-a plugin registry, a pipeline description language, a native media element
-catalog, and Xilinx HLS/AXI4-Stream interop are specified but not yet
-implemented (see [Architecture & Roadmap](#architecture--roadmap)).
 Contributions and design ideas are welcome via the issues channel.
 
 # Table of Contents
@@ -27,9 +15,7 @@ Contributions and design ideas are welcome via the issues channel.
 - [Core Concepts](#core-concepts)
 - [Elements](#elements)
 - [Bus & Messaging](#bus--messaging)
-- [Architecture & Roadmap](#architecture--roadmap)
 - [Testing & Coverage](#testing--coverage)
-- [Documentation](#documentation)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -210,27 +196,6 @@ bus's `message_posted` signal — fired in `post()` order, once per message —
 so the application's main thread can block on something else (e.g. an OS
 interrupt) instead of a poll loop.
 
-# Architecture & Roadmap
-
-The design specifications under [`docs.src/content/specifications/`](docs.src/content/specifications)
-track where the engine is headed, in dependency order:
-
-- **SRS-001: Variant/Observable Architecture** — the `variant`/`object`/
-  signal foundation described above. Largely implemented: containers are
-  built and tested, and `structure`/`caps`/`pad`/`element`/`bin`/`bus` all
-  inherit `object`.
-- **SRS-002: Plugin Architecture** — a GStreamer-style plugin/registry/rank
-  system layered on `element_factory`. Specified, not yet implemented.
-- **SRS-003: Dynamic Pipeline Construction** — a `gst-launch`-style text
-  grammar plus a lossless `variant`-tree form, a parser/writer, and a
-  `cxflow-launch` tool. Specified, not yet implemented.
-- **SRS-004: Native Media Plugin Catalog** — the GStreamer element catalog,
-  ported with zero external media/codec/container dependencies, phased by
-  feasibility. Specified, not yet implemented.
-- **SRS-005: Xilinx HLS / AXI4-Stream Compatibility** — an AXI4-Stream
-  transfer model, an HLS-synthesizable element subset, and bridge elements
-  to real PL-resident hardware. Specified, not yet implemented.
-
 # Testing & Coverage
 
 The self-hosted test suite (`include/cxflow/**/testing/*_test.hpp`) builds
@@ -242,22 +207,12 @@ cmake --build build --target cxflow-tests
 build/cxflow-tests
 ```
 
-An HTML line-coverage report (via [gcovr](https://gcovr.com/), GCC/Clang
-only) is published at [`docs/coverage/`](docs/coverage/index.html). To
-regenerate it locally:
+An HTML line-coverage report can be generated locally via
+[gcovr](https://gcovr.com/) (GCC/Clang only):
 
 ```bash
 cmake -S . -B build -DMEDIA_STREAMER_ENABLE_COVERAGE=ON
 cmake --build build --target coverage
-```
-
-# Documentation
-
-The full documentation site lives under [`docs.src/`](docs.src) (Hugo
-source) and builds to [`docs/`](docs). To preview it locally:
-
-```bash
-cd docs.src && hugo server
 ```
 
 # Contributing
