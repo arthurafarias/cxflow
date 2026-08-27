@@ -80,7 +80,7 @@ add_subdirectory(examples)
 # INTERFACE target (Plugin Folder Convention REQ-P.5) - a target must
 # already exist by the time a sibling directory's CMakeLists.txt refers to
 # it.
-option(CXFLOW_BUILD_PLUGINS "Build optional external-dependency plugins under plugins/" ON)
+option(CXFLOW_BUILD_PLUGINS "Build optional external-dependency plugins under plugins/" OFF)
 if(CXFLOW_BUILD_PLUGINS)
   add_subdirectory(plugins)
 endif()
