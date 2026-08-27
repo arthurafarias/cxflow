@@ -34,16 +34,6 @@
 #include <cxflow/elements/identity.hpp>
 #include <cxflow/elements/wave1_plugins.hpp>
 
-#ifdef CXFLOW_PLUGIN_PULSE_ENABLED
-#include <cxflow/plugins/pulse/pulse_plugin.hpp> // SRS-008 - self-registers via plugin_registration on include
-#endif
-#ifdef CXFLOW_PLUGIN_V4L_ENABLED
-#include <cxflow/plugins/v4l/v4l_plugin.hpp> // SRS-009 - self-registers via plugin_registration on include
-#endif
-#ifdef CXFLOW_PLUGIN_GL_ENABLED
-#include <cxflow/plugins/gl/gl_plugin.hpp> // SRS-010 - self-registers via plugin_registration on include
-#endif
-
 using namespace cxflow;
 
 namespace {
